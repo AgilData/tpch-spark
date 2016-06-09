@@ -3,7 +3,7 @@
 UUID='unknown'
 unamestr=`uname`
 if [[ "$unamestr" == "Darwin" ]]; then
-	UUID=$(uuidgen | tr 'A-Z' 'a-z')
+	UUID=$(uuidgen | tr 'A-Z' 'a-z' | egrep -o "[a-zA-Z][-a-zA-Z0-9]*")
 else
 	UUID=$(cat /proc/sys/kernel/random/uuid | egrep -o "[a-zA-Z][-a-zA-Z0-9]*")
 fi
