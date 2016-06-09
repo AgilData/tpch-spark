@@ -22,3 +22,12 @@ dbgen/*.tbl
 dbgen/*.o
 dbgen/dbgen
 dbgen/qgen
+
+.idea
+*.iws
+*.ipr
+*.iml
+target
+
+*.tbl
+*.tar.gz

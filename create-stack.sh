@@ -1,4 +1,4 @@
-# Usage: ./create-stack.sh a b c 8 d 2G m3.medium 5G
+# Usage: ./create-stack.sh a b c 2 d 5G m3.large 5G
 
 UUID='unknown'
 unamestr=`uname`
