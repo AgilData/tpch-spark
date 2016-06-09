@@ -1,0 +1,637 @@
+{
+  "AWSTemplateFormatVersion" : "2010-09-09",
+
+  "Description" : "AgilData cluster setup script",
+
+  "Parameters" : {
+
+    "KeyName": {
+      "Description" : "Name of an existing EC2 KeyPair to enable SSH access to the instances",
+      "Type": "AWS::EC2::KeyPair::KeyName",
+      "ConstraintDescription" : "must be the name of an existing EC2 KeyPair."
+    },
+
+    "BrokerCapacity": {
+      "Default": "2",
+      "Description" : "The initial number of Broker instances",
+      "Type": "Number",
+      "MinValue": "1",
+      "MaxValue": "128",
+      "ConstraintDescription" : "must be between 1 and 128 EC2 instances."
+    },
+
+    "WorkerMem": {
+      "Default": "1G",
+      "Description" : "Amount of memory to give Spark workers",
+      "Type": "String"
+    },
+
+    "ExecMem": {
+      "Default": "5G",
+      "Description" : "Amount of memory to give Spark executors",
+      "Type": "String"
+    },
+
+    "InstanceType" : {
+      "Description" : "WebServer EC2 instance type",
+      "Type" : "String",
+      "Default" : "m1.small",
+      "AllowedValues" : [ "t1.micro", "t2.micro", "t2.small", "t2.medium", "m1.small", "m1.medium", "m1.large", "m1.xlarge", "m2.xlarge", "m2.2xlarge", "m2.4xlarge", "m3.medium", "m3.large", "m3.xlarge", "m3.2xlarge", "c1.medium", "c1.xlarge", "c3.large", "c3.xlarge", "c3.2xlarge", "c3.4xlarge", "c3.8xlarge", "c4.large", "c4.xlarge", "c4.2xlarge", "c4.4xlarge", "c4.8xlarge", "g2.2xlarge", "r3.large", "r3.xlarge", "r3.2xlarge", "r3.4xlarge", "r3.8xlarge", "i2.xlarge", "i2.2xlarge", "i2.4xlarge", "i2.8xlarge", "d2.xlarge", "d2.2xlarge", "d2.4xlarge", "d2.8xlarge", "hi1.4xlarge", "hs1.8xlarge", "cr1.8xlarge", "cc2.8xlarge", "cg1.4xlarge"],
+      "ConstraintDescription" : "must be a valid EC2 instance type."
+    },
+
+    "ArtifactoryUser" : {
+      "Description" : "Username for Artifactory",
+      "Type" : "String",
+      "Default" : "deployer"
+    },
+
+    "HeapSize" : {
+      "Description" : "Broker heap size",
+      "Type" : "String",
+      "Default" : "24g"
+    },
+
+    "ArtifactoryPassword" : {
+      "Description" : "Password for Artifactory",
+      "Type" : "String",
+      "Default" : ""
+    },
+
+    "AgilDataVersion" : {
+      "Description" : "Version of AgilData to install",
+      "Type" : "String",
+      "Default" : "1.7.0-alpha-00032"
+    },
+
+    "ZookeeperVersion" : {
+      "Description" : "Version of Zookeeper to install",
+      "Type" : "String",
+      "Default" : "3.4.6"
+    },
+
+    "ArtifactId" : {
+      "Description" : "Maven artifact ID of the user jars to deploy",
+      "Type" : "String",
+      "Default" : "agildata-examples-java"
+    },
+
+    "ArtifactVersion" : {
+      "Description" : "Maven version number of the user jars to deploy",
+      "Type" : "String",
+      "Default" : "1.7.0-alpha-00032"
+    },
+
+    "SSHLocation" : {
+      "Description" : " The IP address range that can be used to SSH to the EC2 instances",
+      "Type": "String",
+      "MinLength": "9",
+      "MaxLength": "18",
+      "Default": "0.0.0.0/0",
+      "AllowedPattern": "(\\d{1,3})\\.(\\d{1,3})\\.(\\d{1,3})\\.(\\d{1,3})/(\\d{1,2})",
+      "ConstraintDescription": "must be a valid IP CIDR range of the form x.x.x.x/x."
+    }
+  },
+
+  "Mappings" : {
+    "AWSInstanceType2Arch" : {
+      "t1.micro"    : { "Arch" : "PV64"   },
+      "t2.micro"    : { "Arch" : "HVM64"  },
+      "t2.small"    : { "Arch" : "HVM64"  },
+      "t2.medium"   : { "Arch" : "HVM64"  },
+      "m1.small"    : { "Arch" : "PV64"   },
+      "m1.medium"   : { "Arch" : "PV64"   },
+      "m1.large"    : { "Arch" : "PV64"   },
+      "m1.xlarge"   : { "Arch" : "PV64"   },
+      "m2.xlarge"   : { "Arch" : "PV64"   },
+      "m2.2xlarge"  : { "Arch" : "PV64"   },
+      "m2.4xlarge"  : { "Arch" : "PV64"   },
+      "m3.medium"   : { "Arch" : "HVM64"  },
+      "m3.large"    : { "Arch" : "HVM64"  },
+      "m3.xlarge"   : { "Arch" : "HVM64"  },
+      "m3.2xlarge"  : { "Arch" : "HVM64"  },
+      "c1.medium"   : { "Arch" : "PV64"   },
+      "c1.xlarge"   : { "Arch" : "PV64"   },
+      "c3.large"    : { "Arch" : "HVM64"  },
+      "c3.xlarge"   : { "Arch" : "HVM64"  },
+      "c3.2xlarge"  : { "Arch" : "HVM64"  },
+      "c3.4xlarge"  : { "Arch" : "HVM64"  },
+      "c3.8xlarge"  : { "Arch" : "HVM64"  },
+      "c4.large"    : { "Arch" : "HVM64"  },
+      "c4.xlarge"   : { "Arch" : "HVM64"  },
+      "c4.2xlarge"  : { "Arch" : "HVM64"  },
+      "c4.4xlarge"  : { "Arch" : "HVM64"  },
+      "c4.8xlarge"  : { "Arch" : "HVM64"  },
+      "g2.2xlarge"  : { "Arch" : "HVMG2"  },
+      "r3.large"    : { "Arch" : "HVM64"  },
+      "r3.xlarge"   : { "Arch" : "HVM64"  },
+      "r3.2xlarge"  : { "Arch" : "HVM64"  },
+      "r3.4xlarge"  : { "Arch" : "HVM64"  },
+      "r3.8xlarge"  : { "Arch" : "HVM64"  },
+      "i2.xlarge"   : { "Arch" : "HVM64"  },
+      "i2.2xlarge"  : { "Arch" : "HVM64"  },
+      "i2.4xlarge"  : { "Arch" : "HVM64"  },
+      "i2.8xlarge"  : { "Arch" : "HVM64"  },
+      "d2.xlarge"   : { "Arch" : "HVM64"  },
+      "d2.2xlarge"  : { "Arch" : "HVM64"  },
+      "d2.4xlarge"  : { "Arch" : "HVM64"  },
+      "d2.8xlarge"  : { "Arch" : "HVM64"  },
+      "hi1.4xlarge" : { "Arch" : "HVM64"  },
+      "hs1.8xlarge" : { "Arch" : "HVM64"  },
+      "cr1.8xlarge" : { "Arch" : "HVM64"  },
+      "cc2.8xlarge" : { "Arch" : "HVM64"  }
+    }
+  ,
+    "AWSRegionArch2AMI" : {
+      "us-east-1"        : {"PV64" : "ami-0f4cfd64", "HVM64" : "ami-0d4cfd66", "HVMG2" : "ami-5b05ba30"},
+      "us-west-2"        : {"PV64" : "ami-d3c5d1e3", "HVM64" : "ami-d5c5d1e5", "HVMG2" : "ami-a9d6c099"},
+      "us-west-1"        : {"PV64" : "ami-85ea13c1", "HVM64" : "ami-87ea13c3", "HVMG2" : "ami-37827a73"},
+      "eu-west-1"        : {"PV64" : "ami-d6d18ea1", "HVM64" : "ami-e4d18e93", "HVMG2" : "ami-72a9f105"},
+      "eu-central-1"     : {"PV64" : "ami-a4b0b7b9", "HVM64" : "ami-a6b0b7bb", "HVMG2" : "ami-a6c9cfbb"},
+      "ap-northeast-1"   : {"PV64" : "ami-1a1b9f1a", "HVM64" : "ami-1c1b9f1c", "HVMG2" : "ami-f644c4f6"},
+      "ap-southeast-1"   : {"PV64" : "ami-d24b4280", "HVM64" : "ami-d44b4286", "HVMG2" : "ami-12b5bc40"},
+      "ap-southeast-2"   : {"PV64" : "ami-ef7b39d5", "HVM64" : "ami-db7b39e1", "HVMG2" : "ami-b3337e89"},
+      "sa-east-1"        : {"PV64" : "ami-5b098146", "HVM64" : "ami-55098148", "HVMG2" : "NOT_SUPPORTED"},
+      "cn-north-1"       : {"PV64" : "ami-bec45887", "HVM64" : "ami-bcc45885", "HVMG2" : "NOT_SUPPORTED"}
+    }
+
+  },
+
+  "Conditions" : {
+    "Is-EC2-VPC"     : { "Fn::Or" : [ {"Fn::Equals" : [{"Ref" : "AWS::Region"}, "eu-central-1" ]},
+      {"Fn::Equals" : [{"Ref" : "AWS::Region"}, "cn-north-1" ]}]},
+    "Is-EC2-Classic" : { "Fn::Not" : [{ "Condition" : "Is-EC2-VPC"}]}
+  },
+
+  "Resources" : {
+
+    "TestRunner": {
+      "Type": "AWS::EC2::Instance",
+      "Metadata" : {
+        "AWS::CloudFormation::Init" : {
+          "configSets" : {
+            "InstallAndRun" : [ "Install", "Configure" ]
+          },
+
+          "Install" : {
+            "files" : {
+              "/etc/cfn/cfn-hup.conf" : {
+                "content" : { "Fn::Join" : ["", [
+                  "[main]\n",
+                  "stack=", { "Ref" : "AWS::StackId" }, "\n",
+                  "region=", { "Ref" : "AWS::Region" }, "\n"
+                ]]},
+                "mode"    : "000400",
+                "owner"   : "root",
+                "group"   : "root"
+              },
+
+              "/root/start-runner.sh" : {
+                "content": { "Fn::Join" : ["", [
+                  "#!/bin/bash\n",
+                  "set -x\n",
+                  "exec 3>&1 4>&2\n",
+                  "trap 'exec 2>&4 1>&3' 0 1 2 3\n",
+                  "exec 1>log.out 2>&1\n",
+                  "export PATH=/home/ubuntu/jdk1.8.0_91/bin/:/home/ubuntu/apache-maven-3.3.9/bin/:$PATH\n",
+
+                  "cd /home/ubuntu/\n",
+                  "git clone https://github.com/AgilData/tpch-spark.git\n",
+                  "cd /home/ubuntu/tpch-spark/dbgen/\n",
+                  "make clean\n",
+                  "make\n",
+
+                  "cd /home/ubuntu/tpch-spark\n",
+                  "mvn install -DskipTests=true\n",
+
+                  "echo Started Runner!\n",
+                  "echo Signal the status from cfn-init\n",
+                  "/usr/local/bin/cfn-signal -e $? ",
+                  "         --stack ", { "Ref" : "AWS::StackName" },
+                  "         --resource TestRunner ",
+                  "         --region ", { "Ref" : "AWS::Region" }, "\n",
+
+                  "cd /home/ubuntu/dbgen/\n",
+                  "./dbgen -q -vf -s 1\n",
+
+                  "cd /home/ubuntu/tpc-h\n",
+                  "java -cp $(cat cp.txt) tpch.Main --kuduMaster $ZOOKEEPER_ADDRESS:7051 --sparkMaster spark://$ZOOKEEPER_ADDRESS:7077 --inputDir /home/ubuntu/tpch-spark/dbgen/ --executorMemory ", { "Ref" : "ExecMem" }, " --mode populate\n"
+
+                ]]}
+              },
+
+              "/etc/cfn/hooks.d/cfn-auto-reloader.conf" : {
+                "content": { "Fn::Join" : ["", [
+                  "[cfn-auto-reloader-hook]\n",
+                  "triggers=post.update\n",
+                  "path=Resources.WebServerInstance.Metadata.AWS::CloudFormation::Init\n",
+                  "action=/opt/aws/bin/cfn-init -v ",
+                  "         --stack ", { "Ref" : "AWS::StackName" },
+                  "         --resource TestRunner ",
+                  "         --configsets InstallAndRun ",
+                  "         --region ", { "Ref" : "AWS::Region" }, "\n",
+                  "runas=root\n"
+                ]]}
+              }
+            }
+          },
+
+          "Configure" : {
+            "commands" : {
+              "test" : {
+                "command" : "sh /root/start-runner.sh",
+                "env" : {
+                  "ZOOKEEPER_VERSION" : { "Ref" : "ZookeeperVersion" },
+                  "ARTIFACTORY_USER" : { "Ref" : "ArtifactoryUser" },
+                  "ARTIFACTORY_PWD" : { "Ref" : "ArtifactoryPassword" },
+                  "ARTIFACT_ID" : { "Ref" : "ArtifactId" },
+                  "ARTIFACT_VERSION" : { "Ref" : "ArtifactVersion" },
+                  "ZOOKEEPER_ADDRESS": {"Fn::GetAtt" : ["ZookeeperInstance", "PublicIp"]}
+                },
+                "cwd" : "~"
+              }
+            }
+          }
+        }
+      },
+      "Properties": {
+        "ImageId" : "ami-2933cb44",
+        "AvailabilityZone" : "us-east-1b",
+        "InstanceType"   : { "Ref" : "InstanceType" },
+        "SecurityGroups" : [ {"Ref" : "ZookeeperSecurityGroup"} ],
+        "KeyName"        : { "Ref" : "KeyName" },
+        "UserData": {
+          "Fn::Base64": { "Fn::Join":["", [
+            "#!/bin/bash -ex\n",
+            "set -x\n",
+            "exec 3>&1 4>&2\n",
+            "trap 'exec 2>&4 1>&3' 0 1 2 3\n",
+            "exec 1>log.out 2>&1\n",
+
+            "apt-get update\n",
+            "apt-get -y install python-setuptools\n",
+            "mkdir aws-cfn-bootstrap-latest\n",
+            "curl https://s3.amazonaws.com/cloudformation-examples/aws-cfn-bootstrap-latest.tar.gz | tar xz -C aws-cfn-bootstrap-latest --strip-components 1\n",
+            "easy_install aws-cfn-bootstrap-latest\n",
+            "\n",
+            "echo Install the files and packages from the metadata\n",
+            "/usr/local/bin/cfn-init -v ",
+            "         --stack ", { "Ref" : "AWS::StackName" },
+            "         --resource TestRunner ",
+            "         --configsets InstallAndRun ",
+            "         --region ", { "Ref" : "AWS::Region" }, "\n"
+          ]]}
+        }
+      },
+      "CreationPolicy" : {
+        "ResourceSignal" : {
+          "Timeout" : "PT15M"
+        }
+      },
+      "DependsOn": "BrokerGroup"
+    },
+
+    "BrokerGroup" : {
+      "Type" : "AWS::AutoScaling::AutoScalingGroup",
+      "Properties" : {
+        "AvailabilityZones" : ["us-east-1b"],
+        "LaunchConfigurationName" : { "Ref" : "LaunchConfig" },
+        "MinSize" : "1",
+        "MaxSize" : "128",
+        "DesiredCapacity" : { "Ref" : "BrokerCapacity" }
+      },
+      "CreationPolicy" : {
+        "ResourceSignal" : {
+          "Timeout" : "PT60M",
+          "Count"   : { "Ref" : "BrokerCapacity" }
+        }
+      },
+      "UpdatePolicy": {
+        "AutoScalingRollingUpdate": {
+          "MinInstancesInService": "1",
+          "MaxBatchSize": "1",
+          "PauseTime" : "PT60M",
+          "WaitOnResourceSignals": "true"
+        }
+      },
+      "DependsOn": "ZookeeperInstance"
+    },
+
+    "LaunchConfig": {
+      "Type" : "AWS::AutoScaling::LaunchConfiguration",
+      "Metadata" : {
+        "Comment1" : "Configure the bootstrap helpers to install the Apache Web Server and PHP",
+        "Comment2" : "The website content is downloaded from the CloudFormationPHPSample.zip file",
+
+        "AWS::CloudFormation::Init" : {
+          "config" : {
+
+            "files" : {
+
+              "/etc/cfn/cfn-hup.conf" : {
+                "content" : { "Fn::Join" : ["", [
+                  "[main]\n",
+                  "stack=", { "Ref" : "AWS::StackId" }, "\n",
+                  "region=", { "Ref" : "AWS::Region" }, "\n"
+                ]]},
+                "mode"    : "000400",
+                "owner"   : "root",
+                "group"   : "root"
+              },
+
+              "/etc/cfn/hooks.d/cfn-auto-reloader.conf" : {
+                "content": { "Fn::Join" : ["", [
+                  "[cfn-auto-reloader-hook]\n",
+                  "triggers=post.update\n",
+                  "path=Resources.LaunchConfig.Metadata.AWS::CloudFormation::Init\n",
+                  "action=/opt/aws/bin/cfn-init -v ",
+                  "         --stack ", { "Ref" : "AWS::StackName" },
+                  "         --resource LaunchConfig ",
+                  "         --region ", { "Ref" : "AWS::Region" }, "\n",
+                  "runas=root\n"
+                ]]}
+              },
+
+              "/root/start-worker.sh" : {
+                "content": { "Fn::Join" : ["", [
+                  "#!/bin/bash\n",
+                  "\n",
+
+                  "# Log output\n",
+                  "set -x\n",
+                  "exec 3>&1 4>&2\n",
+                  "trap 'exec 2>&4 1>&3' 0 1 2 3\n",
+                  "exec 1>log.out 2>&1\n",
+                  "\n",
+
+                  "export PATH=/home/ubuntu/jdk1.8.0_91/bin/:/home/ubuntu/apache-maven-3.3.9/bin/:$PATH\n",
+                  "mkdir -p /var/lib/kudu\n",
+                  "chmod ugo+rw /var/lib/kudu\n",
+
+                  "cd /home/ubuntu/spark\n",
+                  "./sbin/start-slave.sh --memory ", { "Ref" : "WorkerMem" }," spark://${ZOOKEEPER_ADDRESS}:7077 &\n",
+                  "cd /home/ubuntu/kudu/build/release\n",
+                  "nohup bin/kudu-tserver -fs_wal_dir=/var/lib/kudu/tserver -tserver_master_addrs ${ZOOKEEPER_ADDRESS} -logtostderr -use_hybrid_clock=false -fs_wal_dir=/var/lib/kudu/tserver &\n",
+
+                  "echo Started Worker!\n",
+                  "echo Signal the status from cfn-init\n",
+                  "/usr/local/bin/cfn-signal -e $? ",
+                  "         --stack ", { "Ref" : "AWS::StackName" },
+                  "         --resource BrokerGroup ",
+                  "         --region ", { "Ref" : "AWS::Region" }, "\n"
+
+                ]]}
+              }
+            },
+
+            "commands" : {
+              "agildata-install" : {
+                "command" : "sh /root/start-worker.sh",
+                "env" : {
+                  "HEAPSIZE" : { "Ref" : "HeapSize" },
+                  "ARTIFACTORY_USER" : { "Ref" : "ArtifactoryUser" },
+                  "ARTIFACTORY_PWD" : { "Ref" : "ArtifactoryPassword" },
+                  "AGILDATA_VER" : { "Ref" : "AgilDataVersion" },
+                  "ARTIFACT_ID" : { "Ref" : "ArtifactId" },
+                  "ARTIFACT_VERSION" : { "Ref" : "ArtifactVersion" },
+                  "ZOOKEEPER_ADDRESS": {"Fn::GetAtt" : ["ZookeeperInstance", "PublicIp"]}
+                },
+                "cwd" : "~"
+              }
+            }
+          }
+        }
+      },
+      "Properties": {
+        "ImageId" : "ami-2933cb44",
+        "InstanceType" : { "Ref" : "InstanceType" },
+        "SecurityGroups" : [ {"Ref" : "BrokerSecurityGroup"} ],
+        "KeyName" : { "Ref" : "KeyName" },
+        "UserData": {
+          "Fn::Base64": { "Fn::Join":["", [
+            "#!/bin/bash -ex\n",
+            "set -x\n",
+            "exec 3>&1 4>&2\n",
+            "trap 'exec 2>&4 1>&3' 0 1 2 3\n",
+            "exec 1>log.out 2>&1\n",
+
+            "apt-get update\n",
+            "apt-get -y install python-setuptools\n",
+            "mkdir aws-cfn-bootstrap-latest\n",
+            "curl https://s3.amazonaws.com/cloudformation-examples/aws-cfn-bootstrap-latest.tar.gz | tar xz -C aws-cfn-bootstrap-latest --strip-components 1\n",
+            "easy_install aws-cfn-bootstrap-latest\n",
+            "/usr/local/bin/cfn-init -v --stack ", { "Ref":"AWS::StackName" }, " --resource LaunchConfig", " --region ", { "Ref": "AWS::Region" }, "\n"
+          ]]}
+        }
+      }
+    },
+
+    "BrokerSecurityGroup" : {
+      "Type" : "AWS::EC2::SecurityGroup",
+      "Properties" : {
+        "GroupDescription" : "Enable HTTP access via port 80, SSH access, remote debugging, and JMX",
+        "SecurityGroupIngress" : [
+          {
+            "IpProtocol" : "tcp",
+            "FromPort" : "7050",
+            "ToPort" : "7050",
+            "CidrIp" : { "Ref" : "SSHLocation"}
+          },
+          {
+            "IpProtocol" : "tcp",
+            "FromPort" : "8050",
+            "ToPort" : "8050",
+            "CidrIp" : { "Ref" : "SSHLocation"}
+          },
+          {
+            "IpProtocol" : "tcp",
+            "FromPort" : "8081",
+            "ToPort" : "8081",
+            "CidrIp" : { "Ref" : "SSHLocation"}
+          },
+          {
+            "IpProtocol" : "tcp",
+            "FromPort" : "22",
+            "ToPort" : "22",
+            "CidrIp" : { "Ref" : "SSHLocation"}
+          }
+        ]
+      }
+    },
+
+    "ZookeeperSecurityGroup" : {
+      "Type" : "AWS::EC2::SecurityGroup",
+      "Properties" : {
+        "GroupDescription" : "Enable access via port 2181 and SSH access",
+        "SecurityGroupIngress" : [
+          {
+            "IpProtocol" : "tcp",
+            "FromPort" : "8080",
+            "ToPort" : "8080",
+            "CidrIp" : { "Ref" : "SSHLocation"}
+          },
+          {
+            "IpProtocol" : "tcp",
+            "FromPort" : "8051",
+            "ToPort" : "8051",
+            "CidrIp" : { "Ref" : "SSHLocation"}
+          },
+          {
+            "IpProtocol" : "tcp",
+            "FromPort" : "6066",
+            "ToPort" : "6066",
+            "CidrIp" : { "Ref" : "SSHLocation"}
+          },
+          {
+            "IpProtocol" : "tcp",
+            "FromPort" : "7077",
+            "ToPort" : "7077",
+            "CidrIp" : { "Ref" : "SSHLocation"}
+          },
+          {
+            "IpProtocol" : "tcp",
+            "FromPort" : "7051",
+            "ToPort" : "7051",
+            "CidrIp" : { "Ref" : "SSHLocation"}
+          },
+          {
+            "IpProtocol" : "tcp",
+            "FromPort" : "22",
+            "ToPort" : "22",
+            "CidrIp" : { "Ref" : "SSHLocation"}
+          }
+        ]
+      }
+    },
+
+    "ZookeeperInstance": {
+      "Type": "AWS::EC2::Instance",
+      "Metadata" : {
+        "AWS::CloudFormation::Init" : {
+          "configSets" : {
+            "InstallAndRun" : [ "Install", "Configure" ]
+          },
+
+          "Install" : {
+            "files" : {
+              "/etc/cfn/cfn-hup.conf" : {
+                "content" : { "Fn::Join" : ["", [
+                  "[main]\n",
+                  "stack=", { "Ref" : "AWS::StackId" }, "\n",
+                  "region=", { "Ref" : "AWS::Region" }, "\n"
+                ]]},
+                "mode"    : "000400",
+                "owner"   : "root",
+                "group"   : "root"
+              },
+
+              "/root/start-master.sh" : {
+                "content": { "Fn::Join" : ["", [
+                  "#!/bin/bash\n",
+                  "set -x\n",
+                  "exec 3>&1 4>&2\n",
+                  "trap 'exec 2>&4 1>&3' 0 1 2 3\n",
+                  "exec 1>log.out 2>&1\n",
+
+                  "export PATH=/home/ubuntu/jdk1.8.0_91/bin/:/home/ubuntu/apache-maven-3.3.9/bin/:$PATH\n",
+                  "mkdir -p /var/lib/kudu\n",
+                  "chmod ugo+rw /var/lib/kudu\n",
+
+                  "cd /home/ubuntu/spark\n",
+                  "./sbin/start-master.sh\n",
+                  "cd /home/ubuntu/kudu/build/release\n",
+                	"nohup bin/kudu-master -fs_wal_dir=/var/lib/kudu/master -logtostderr -use_hybrid_clock=false --webserver_doc_root=/home/ubuntu/kudu &\n",
+
+                  "echo Started Master!\n",
+                  "echo Signal the status from cfn-init\n",
+                  "/usr/local/bin/cfn-signal -e $? ",
+                  "         --stack ", { "Ref" : "AWS::StackName" },
+                  "         --resource ZookeeperInstance ",
+                  "         --region ", { "Ref" : "AWS::Region" }, "\n"
+                ]]}
+              },
+
+              "/etc/cfn/hooks.d/cfn-auto-reloader.conf" : {
+                "content": { "Fn::Join" : ["", [
+                  "[cfn-auto-reloader-hook]\n",
+                  "triggers=post.update\n",
+                  "path=Resources.WebServerInstance.Metadata.AWS::CloudFormation::Init\n",
+                  "action=/opt/aws/bin/cfn-init -v ",
+                  "         --stack ", { "Ref" : "AWS::StackName" },
+                  "         --resource ZookeeperInstance ",
+                  "         --configsets InstallAndRun ",
+                  "         --region ", { "Ref" : "AWS::Region" }, "\n",
+                  "runas=root\n"
+                ]]}
+              }
+            }
+          },
+
+          "Configure" : {
+            "commands" : {
+              "test" : {
+                "command" : "sh /root/start-master.sh",
+                "env" : {
+                  "ZOOKEEPER_VERSION" : { "Ref" : "ZookeeperVersion" },
+                  "ARTIFACTORY_USER" : { "Ref" : "ArtifactoryUser" },
+                  "ARTIFACTORY_PWD" : { "Ref" : "ArtifactoryPassword" },
+                  "ARTIFACT_ID" : { "Ref" : "ArtifactId" },
+                  "ARTIFACT_VERSION" : { "Ref" : "ArtifactVersion" }
+                },
+                "cwd" : "~"
+              }
+            }
+          }
+        }
+      },
+      "Properties": {
+        "ImageId" : "ami-2933cb44",
+        "AvailabilityZone" : "us-east-1b",
+        "InstanceType"   : { "Ref" : "InstanceType" },
+        "SecurityGroups" : [ {"Ref" : "ZookeeperSecurityGroup"} ],
+        "KeyName"        : { "Ref" : "KeyName" },
+        "UserData": {
+          "Fn::Base64": { "Fn::Join":["", [
+            "#!/bin/bash -ex\n",
+            "set -x\n",
+            "exec 3>&1 4>&2\n",
+            "trap 'exec 2>&4 1>&3' 0 1 2 3\n",
+            "exec 1>log.out 2>&1\n",
+
+            "apt-get update\n",
+            "apt-get -y install python-setuptools\n",
+            "mkdir aws-cfn-bootstrap-latest\n",
+            "curl https://s3.amazonaws.com/cloudformation-examples/aws-cfn-bootstrap-latest.tar.gz | tar xz -C aws-cfn-bootstrap-latest --strip-components 1\n",
+            "easy_install aws-cfn-bootstrap-latest\n",
+            "\n",
+            "echo Install the files and packages from the metadata\n",
+            "/usr/local/bin/cfn-init -v ",
+            "         --stack ", { "Ref" : "AWS::StackName" },
+            "         --resource ZookeeperInstance ",
+            "         --configsets InstallAndRun ",
+            "         --region ", { "Ref" : "AWS::Region" }, "\n"
+          ]]}
+        }
+      },
+      "CreationPolicy" : {
+        "ResourceSignal" : {
+          "Timeout" : "PT15M"
+        }
+      }
+    }
+  },
+
+  "Outputs" : {
+    "ZookeeperURL" : {
+      "Description" : "URL for Zookeeper",
+      "Value" : {
+        "Fn::Join" : [
+          "", [
+            { "Fn::GetAtt" : [ "ZookeeperInstance", "PublicDnsName" ]},
+            ":2181"
+          ]
+        ]
+      }
+    }
+  }
+}
