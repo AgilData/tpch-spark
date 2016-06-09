@@ -1,7 +1,7 @@
 {
   "AWSTemplateFormatVersion" : "2010-09-09",
 
-  "Description" : "AgilData cluster setup script",
+  "Description" : "Spark on Kudu TCP-H query performance test",
 
   "Parameters" : {
 
@@ -27,7 +27,7 @@
     },
 
     "ExecMem": {
-      "Default": "5G",
+      "Default": "1G",
       "Description" : "Amount of memory to give Spark executors",
       "Type": "String"
     },
@@ -38,48 +38,6 @@
       "Default" : "m1.small",
       "AllowedValues" : [ "t1.micro", "t2.micro", "t2.small", "t2.medium", "m1.small", "m1.medium", "m1.large", "m1.xlarge", "m2.xlarge", "m2.2xlarge", "m2.4xlarge", "m3.medium", "m3.large", "m3.xlarge", "m3.2xlarge", "c1.medium", "c1.xlarge", "c3.large", "c3.xlarge", "c3.2xlarge", "c3.4xlarge", "c3.8xlarge", "c4.large", "c4.xlarge", "c4.2xlarge", "c4.4xlarge", "c4.8xlarge", "g2.2xlarge", "r3.large", "r3.xlarge", "r3.2xlarge", "r3.4xlarge", "r3.8xlarge", "i2.xlarge", "i2.2xlarge", "i2.4xlarge", "i2.8xlarge", "d2.xlarge", "d2.2xlarge", "d2.4xlarge", "d2.8xlarge", "hi1.4xlarge", "hs1.8xlarge", "cr1.8xlarge", "cc2.8xlarge", "cg1.4xlarge"],
       "ConstraintDescription" : "must be a valid EC2 instance type."
-    },
-
-    "ArtifactoryUser" : {
-      "Description" : "Username for Artifactory",
-      "Type" : "String",
-      "Default" : "deployer"
-    },
-
-    "HeapSize" : {
-      "Description" : "Broker heap size",
-      "Type" : "String",
-      "Default" : "24g"
-    },
-
-    "ArtifactoryPassword" : {
-      "Description" : "Password for Artifactory",
-      "Type" : "String",
-      "Default" : ""
-    },
-
-    "AgilDataVersion" : {
-      "Description" : "Version of AgilData to install",
-      "Type" : "String",
-      "Default" : "1.7.0-alpha-00032"
-    },
-
-    "ZookeeperVersion" : {
-      "Description" : "Version of Zookeeper to install",
-      "Type" : "String",
-      "Default" : "3.4.6"
-    },
-
-    "ArtifactId" : {
-      "Description" : "Maven artifact ID of the user jars to deploy",
-      "Type" : "String",
-      "Default" : "agildata-examples-java"
-    },
-
-    "ArtifactVersion" : {
-      "Description" : "Maven version number of the user jars to deploy",
-      "Type" : "String",
-      "Default" : "1.7.0-alpha-00032"
     },
 
     "SSHLocation" : {
@@ -193,7 +151,7 @@
                   "exec 3>&1 4>&2\n",
                   "trap 'exec 2>&4 1>&3' 0 1 2 3\n",
                   "exec 1>log.out 2>&1\n",
-                  "export PATH=/home/ubuntu/jdk1.8.0_91/bin/:/home/ubuntu/apache-maven-3.3.9/bin/:$PATH\n",
+                  "export PATH=/home/ubuntu/sbt/bin/:/home/ubuntu/jdk1.8.0_91/bin/:/home/ubuntu/apache-maven-3.3.9/bin/:$PATH\n",
 
                   "cd /home/ubuntu/\n",
                   "git clone https://github.com/AgilData/tpch-spark.git\n",
@@ -202,7 +160,8 @@
                   "make\n",
 
                   "cd /home/ubuntu/tpch-spark\n",
-                  "mvn install -DskipTests=true\n",
+                  "sudo ln -s /home/ubuntu/.m2/ /root/.m2\n",
+                  "sbt compile\n",
 
                   "echo Started Runner!\n",
                   "echo Signal the status from cfn-init\n",
@@ -212,10 +171,10 @@
                   "         --region ", { "Ref" : "AWS::Region" }, "\n",
 
                   "cd /home/ubuntu/dbgen/\n",
-                  "./dbgen -q -vf -s 1\n",
+                  "./dbgen -qf -s 1\n",
 
-                  "cd /home/ubuntu/tpc-h\n",
-                  "java -cp $(cat cp.txt) tpch.Main --kuduMaster $ZOOKEEPER_ADDRESS:7051 --sparkMaster spark://$ZOOKEEPER_ADDRESS:7077 --inputDir /home/ubuntu/tpch-spark/dbgen/ --executorMemory ", { "Ref" : "ExecMem" }, " --mode populate\n"
+                  "cd /home/ubuntu/tpch-spark/spark-kudu\n",
+                  "sbt 'run --kuduMaster $ZOOKEEPER_ADDRESS:7051 --sparkMaster spark://$ZOOKEEPER_ADDRESS:7077 --inputDir /home/ubuntu/tpch-spark/dbgen/ --executorMemory ", { "Ref" : "ExecMem" }, " --mode populate'\n"
 
                 ]]}
               },
@@ -241,11 +200,6 @@
               "test" : {
                 "command" : "sh /root/start-runner.sh",
                 "env" : {
-                  "ZOOKEEPER_VERSION" : { "Ref" : "ZookeeperVersion" },
-                  "ARTIFACTORY_USER" : { "Ref" : "ArtifactoryUser" },
-                  "ARTIFACTORY_PWD" : { "Ref" : "ArtifactoryPassword" },
-                  "ARTIFACT_ID" : { "Ref" : "ArtifactId" },
-                  "ARTIFACT_VERSION" : { "Ref" : "ArtifactVersion" },
                   "ZOOKEEPER_ADDRESS": {"Fn::GetAtt" : ["ZookeeperInstance", "PublicIp"]}
                 },
                 "cwd" : "~"
@@ -388,12 +342,6 @@
               "agildata-install" : {
                 "command" : "sh /root/start-worker.sh",
                 "env" : {
-                  "HEAPSIZE" : { "Ref" : "HeapSize" },
-                  "ARTIFACTORY_USER" : { "Ref" : "ArtifactoryUser" },
-                  "ARTIFACTORY_PWD" : { "Ref" : "ArtifactoryPassword" },
-                  "AGILDATA_VER" : { "Ref" : "AgilDataVersion" },
-                  "ARTIFACT_ID" : { "Ref" : "ArtifactId" },
-                  "ARTIFACT_VERSION" : { "Ref" : "ArtifactVersion" },
                   "ZOOKEEPER_ADDRESS": {"Fn::GetAtt" : ["ZookeeperInstance", "PublicIp"]}
                 },
                 "cwd" : "~"
@@ -571,13 +519,6 @@
             "commands" : {
               "test" : {
                 "command" : "sh /root/start-master.sh",
-                "env" : {
-                  "ZOOKEEPER_VERSION" : { "Ref" : "ZookeeperVersion" },
-                  "ARTIFACTORY_USER" : { "Ref" : "ArtifactoryUser" },
-                  "ARTIFACTORY_PWD" : { "Ref" : "ArtifactoryPassword" },
-                  "ARTIFACT_ID" : { "Ref" : "ArtifactId" },
-                  "ARTIFACT_VERSION" : { "Ref" : "ArtifactVersion" }
-                },
                 "cwd" : "~"
               }
             }
