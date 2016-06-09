@@ -214,6 +214,10 @@
         "InstanceType"   : { "Ref" : "InstanceType" },
         "SecurityGroups" : [ {"Ref" : "ZookeeperSecurityGroup"} ],
         "KeyName"        : { "Ref" : "KeyName" },
+        "Tags" : [
+          { "Key" : "Name", "Value" : { "Fn::Join" : [ " ", [ "TestRunner", { "Ref" : "AWS::StackName" } ] ] }},
+          {"Key" : "Billing Breakout", "Value" : "kudu_poc"}
+        ],
         "UserData": {
           "Fn::Base64": { "Fn::Join":["", [
             "#!/bin/bash -ex\n",
@@ -252,7 +256,11 @@
         "LaunchConfigurationName" : { "Ref" : "LaunchConfig" },
         "MinSize" : "1",
         "MaxSize" : "128",
-        "DesiredCapacity" : { "Ref" : "BrokerCapacity" }
+        "DesiredCapacity" : { "Ref" : "BrokerCapacity" },
+        "Tags" : [
+          { "Key" : "Name", "Value" : { "Fn::Join" : [ " ", [ "TServer", { "Ref" : "AWS::StackName" } ] ] }},
+          {"Key" : "Billing Breakout", "Value" : "kudu_poc"}
+        ]
       },
       "CreationPolicy" : {
         "ResourceSignal" : {
@@ -531,6 +539,10 @@
         "InstanceType"   : { "Ref" : "InstanceType" },
         "SecurityGroups" : [ {"Ref" : "ZookeeperSecurityGroup"} ],
         "KeyName"        : { "Ref" : "KeyName" },
+        "Tags" : [
+          { "Key" : "Name", "Value" : { "Fn::Join" : [ " ", [ "Master", { "Ref" : "AWS::StackName" } ] ] }},
+          {"Key" : "Billing Breakout", "Value" : "kudu_poc"}
+        ]
         "UserData": {
           "Fn::Base64": { "Fn::Join":["", [
             "#!/bin/bash -ex\n",
