@@ -26,9 +26,3 @@ libraryDependencies += "commons-cli" % "commons-cli" % "1.3"
 
 resolvers += "Local Maven Repository" at "file:///"+Path.userHome+"/.m2/repository"
 
-resolvers += "Artifactory" at "http://54.226.90.86:8081/artifactory/public-release/"
-
-publishTo := Some("Artifactory" at "http://54.226.90.86:8081/artifactory/codefutures-releases/")
-
-credentials += Credentials(Path.userHome / ".ivy2" / ".credentials")
-
