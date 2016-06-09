@@ -106,11 +106,12 @@
                   "         --resource TestRunner ",
                   "         --region ", { "Ref" : "AWS::Region" }, "\n",
 
-                  "cd /home/ubuntu/dbgen/\n",
+                  "cd /home/ubuntu/tpch-spark/dbgen/\n",
                   "./dbgen -qf -s 1\n",
 
+                  "echo ZOOKEEPER_ADDRESS=$ZOOKEEPER_ADDRESS\n",
                   "cd /home/ubuntu/tpch-spark/spark-kudu\n",
-                  "sbt 'run --kuduMaster $ZOOKEEPER_ADDRESS:7051 --sparkMaster spark://$ZOOKEEPER_ADDRESS:7077 --inputDir /home/ubuntu/tpch-spark/dbgen/ --executorMemory ", { "Ref" : "ExecMem" }, " --mode populate'\n"
+                  "sbt \"run --kuduMaster $ZOOKEEPER_ADDRESS:7051 --sparkMaster spark://$ZOOKEEPER_ADDRESS:7077 --inputDir /home/ubuntu/tpch-spark/dbgen/ --executorMemory ", { "Ref" : "ExecMem" }, " --mode populate\"\n"
 
                 ]]}
               },

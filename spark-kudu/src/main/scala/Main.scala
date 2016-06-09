@@ -38,6 +38,7 @@ object Main {
     println(s"KUDU_MASTER=$KUDU_MASTER")
     println(s"INPUT_DIR=$INPUT_DIR")
     println(s"SPARK_MASTER=$SPARK_MASTER")
+    println(s"EXEC_MEM=$EXEC_MEM")
 
     // get the name of the class excluding dollar signs and package
     val className = this.getClass.getName.split("\\.").last.replaceAll("\\$", "")
