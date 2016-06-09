@@ -1,4 +1,4 @@
-# Usage: ./create-stack.sh a b c 2 d 5G m3.large 5G
+# Usage: ./create-stack.sh a b c 2 d 5G m3.large 5G brent-keys2
 
 UUID='unknown'
 unamestr=`uname`
@@ -13,7 +13,7 @@ aws cloudformation create-stack \
 	--stack-name $UUID \
 	--template-body file://cloud-formation.json \
 	--parameters \
-		ParameterKey=KeyName,ParameterValue=brent-keys2 \
+		ParameterKey=KeyName,ParameterValue=$9 \
 		ParameterKey=ArtifactoryPassword,ParameterValue=$5 \
 		ParameterKey=BrokerCapacity,ParameterValue=$4 \
 		ParameterKey=AgilDataVersion,ParameterValue=$3 \
