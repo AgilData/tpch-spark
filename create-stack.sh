@@ -13,7 +13,7 @@ aws cloudformation create-stack \
 	--stack-name $UUID \
 	--template-body file://cloud-formation.json \
 	--parameters \
-		ParameterKey=KeyName,ParameterValue=default \
+		ParameterKey=KeyName,ParameterValue=brent-keys2 \
 		ParameterKey=ArtifactoryPassword,ParameterValue=$5 \
 		ParameterKey=BrokerCapacity,ParameterValue=$4 \
 		ParameterKey=AgilDataVersion,ParameterValue=$3 \
