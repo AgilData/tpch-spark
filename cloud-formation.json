@@ -258,8 +258,8 @@
         "MaxSize" : "128",
         "DesiredCapacity" : { "Ref" : "BrokerCapacity" },
         "Tags" : [
-          { "Key" : "Name", "Value" : { "Fn::Join" : [ " ", [ "TServer", { "Ref" : "AWS::StackName" } ] ] }},
-          {"Key" : "Billing Breakout", "Value" : "kudu_poc"}
+          { "Key" : "Name", "Value" : { "Fn::Join" : [ " ", [ "TServer", { "Ref" : "AWS::StackName" } ] ] }, "PropagateAtLaunch" : "true"},
+          {"Key" : "Billing Breakout", "Value" : "kudu_poc", "PropagateAtLaunch" : "true"}
         ]
       },
       "CreationPolicy" : {
