@@ -149,7 +149,7 @@
         "ImageId" : "ami-2933cb44",
         "AvailabilityZone" : "us-east-1b",
         "InstanceType"   : { "Ref" : "InstanceType" },
-        "SecurityGroups" : [ {"Ref" : "ZookeeperSecurityGroup"} ],
+        "SecurityGroups" : [ {"Ref" : "KuduSparkMasterSecurityGroup"} ],
         "KeyName"        : { "Ref" : "KeyName" },
         "Tags" : [
           { "Key" : "Name", "Value" : { "Fn::Join" : [ " ", [ "TestRunner", { "Ref" : "AWS::StackName" } ] ] }},
