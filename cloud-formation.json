@@ -297,7 +297,7 @@
       "Properties": {
         "ImageId" : "ami-2933cb44",
         "InstanceType" : { "Ref" : "InstanceType" },
-        "SecurityGroups" : [ {"Ref" : "BrokerSecurityGroup"} ],
+        "SecurityGroups" : [ {"Ref" : "TServerSecurityGroup"} ],
         "KeyName" : { "Ref" : "KeyName" },
         "UserData": {
           "Fn::Base64": { "Fn::Join":["", [
@@ -318,7 +318,7 @@
       }
     },
 
-    "BrokerSecurityGroup" : {
+    "TServerSecurityGroup" : {
       "Type" : "AWS::EC2::SecurityGroup",
       "Properties" : {
         "GroupDescription" : "Enable HTTP access via port 80, SSH access, remote debugging, and JMX",
@@ -351,7 +351,7 @@
       }
     },
 
-    "ZookeeperSecurityGroup" : {
+    "KuduSparkMasterSecurityGroup" : {
       "Type" : "AWS::EC2::SecurityGroup",
       "Properties" : {
         "GroupDescription" : "Enable access via port 2181 and SSH access",
@@ -473,7 +473,7 @@
         "ImageId" : "ami-2933cb44",
         "AvailabilityZone" : "us-east-1b",
         "InstanceType"   : { "Ref" : "InstanceType" },
-        "SecurityGroups" : [ {"Ref" : "ZookeeperSecurityGroup"} ],
+        "SecurityGroups" : [ {"Ref" : "KuduSparkMasterSecurityGroup"} ],
         "KeyName"        : { "Ref" : "KeyName" },
         "Tags" : [
           { "Key" : "Name", "Value" : { "Fn::Join" : [ " ", [ "Master", { "Ref" : "AWS::StackName" } ] ] }},
