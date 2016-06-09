@@ -149,7 +149,7 @@
         "ImageId" : "ami-2933cb44",
         "AvailabilityZone" : "us-east-1b",
         "InstanceType"   : { "Ref" : "InstanceType" },
-        "SecurityGroups" : [ {"Ref" : "KuduSparkMasterSecurityGroup"} ],
+        "SecurityGroups" : [ {"Ref" : "TestRunnerSecurityGroup"} ],
         "KeyName"        : { "Ref" : "KeyName" },
         "Tags" : [
           { "Key" : "Name", "Value" : { "Fn::Join" : [ " ", [ "TestRunner", { "Ref" : "AWS::StackName" } ] ] }},
@@ -326,26 +326,23 @@
         "SecurityGroupIngress" : [
           {
             "IpProtocol" : "tcp",
-            "FromPort" : "7050",
-            "ToPort" : "7050",
+            "FromPort" : "0",
+            "ToPort" : "65535",
             "CidrIp" : { "Ref" : "SSHLocation"}
-          },
+          }
+        ]
+      }
+    },
+
+    "TestRunnerSecurityGroup" : {
+      "Type" : "AWS::EC2::SecurityGroup",
+      "Properties" : {
+        "GroupDescription" : "Enable access via port 2181 and SSH access",
+        "SecurityGroupIngress" : [
           {
             "IpProtocol" : "tcp",
-            "FromPort" : "8050",
-            "ToPort" : "8050",
-            "CidrIp" : { "Ref" : "SSHLocation"}
-          },
-          {
-            "IpProtocol" : "tcp",
-            "FromPort" : "8081",
-            "ToPort" : "8081",
-            "CidrIp" : { "Ref" : "SSHLocation"}
-          },
-          {
-            "IpProtocol" : "tcp",
-            "FromPort" : "22",
-            "ToPort" : "22",
+            "FromPort" : "0",
+            "ToPort" : "65535",
             "CidrIp" : { "Ref" : "SSHLocation"}
           }
         ]
@@ -359,38 +356,8 @@
         "SecurityGroupIngress" : [
           {
             "IpProtocol" : "tcp",
-            "FromPort" : "8080",
-            "ToPort" : "8080",
-            "CidrIp" : { "Ref" : "SSHLocation"}
-          },
-          {
-            "IpProtocol" : "tcp",
-            "FromPort" : "8051",
-            "ToPort" : "8051",
-            "CidrIp" : { "Ref" : "SSHLocation"}
-          },
-          {
-            "IpProtocol" : "tcp",
-            "FromPort" : "6066",
-            "ToPort" : "6066",
-            "CidrIp" : { "Ref" : "SSHLocation"}
-          },
-          {
-            "IpProtocol" : "tcp",
-            "FromPort" : "7077",
-            "ToPort" : "7077",
-            "CidrIp" : { "Ref" : "SSHLocation"}
-          },
-          {
-            "IpProtocol" : "tcp",
-            "FromPort" : "7051",
-            "ToPort" : "7051",
-            "CidrIp" : { "Ref" : "SSHLocation"}
-          },
-          {
-            "IpProtocol" : "tcp",
-            "FromPort" : "22",
-            "ToPort" : "22",
+            "FromPort" : "0",
+            "ToPort" : "65535",
             "CidrIp" : { "Ref" : "SSHLocation"}
           }
         ]
