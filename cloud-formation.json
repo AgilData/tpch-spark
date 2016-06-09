@@ -200,7 +200,7 @@
               "test" : {
                 "command" : "sh /root/start-runner.sh",
                 "env" : {
-                  "ZOOKEEPER_ADDRESS": {"Fn::GetAtt" : ["ZookeeperInstance", "PublicIp"]}
+                  "ZOOKEEPER_ADDRESS": {"Fn::GetAtt" : ["MasterInstance", "PublicIp"]}
                 },
                 "cwd" : "~"
               }
@@ -246,10 +246,10 @@
           "Timeout" : "PT15M"
         }
       },
-      "DependsOn": "BrokerGroup"
+      "DependsOn": "TServerGroup"
     },
 
-    "BrokerGroup" : {
+    "TServerGroup" : {
       "Type" : "AWS::AutoScaling::AutoScalingGroup",
       "Properties" : {
         "AvailabilityZones" : ["us-east-1b"],
@@ -276,7 +276,7 @@
           "WaitOnResourceSignals": "true"
         }
       },
-      "DependsOn": "ZookeeperInstance"
+      "DependsOn": "MasterInstance"
     },
 
     "LaunchConfig": {
@@ -339,7 +339,7 @@
                   "echo Signal the status from cfn-init\n",
                   "/usr/local/bin/cfn-signal -e $? ",
                   "         --stack ", { "Ref" : "AWS::StackName" },
-                  "         --resource BrokerGroup ",
+                  "         --resource TServerGroup ",
                   "         --region ", { "Ref" : "AWS::Region" }, "\n"
 
                 ]]}
@@ -350,7 +350,7 @@
               "agildata-install" : {
                 "command" : "sh /root/start-worker.sh",
                 "env" : {
-                  "ZOOKEEPER_ADDRESS": {"Fn::GetAtt" : ["ZookeeperInstance", "PublicIp"]}
+                  "ZOOKEEPER_ADDRESS": {"Fn::GetAtt" : ["MasterInstance", "PublicIp"]}
                 },
                 "cwd" : "~"
               }
@@ -460,7 +460,7 @@
       }
     },
 
-    "ZookeeperInstance": {
+    "MasterInstance": {
       "Type": "AWS::EC2::Instance",
       "Metadata" : {
         "AWS::CloudFormation::Init" : {
@@ -502,7 +502,7 @@
                   "echo Signal the status from cfn-init\n",
                   "/usr/local/bin/cfn-signal -e $? ",
                   "         --stack ", { "Ref" : "AWS::StackName" },
-                  "         --resource ZookeeperInstance ",
+                  "         --resource MasterInstance ",
                   "         --region ", { "Ref" : "AWS::Region" }, "\n"
                 ]]}
               },
@@ -514,7 +514,7 @@
                   "path=Resources.WebServerInstance.Metadata.AWS::CloudFormation::Init\n",
                   "action=/opt/aws/bin/cfn-init -v ",
                   "         --stack ", { "Ref" : "AWS::StackName" },
-                  "         --resource ZookeeperInstance ",
+                  "         --resource MasterInstance ",
                   "         --configsets InstallAndRun ",
                   "         --region ", { "Ref" : "AWS::Region" }, "\n",
                   "runas=root\n"
@@ -560,7 +560,7 @@
             "echo Install the files and packages from the metadata\n",
             "/usr/local/bin/cfn-init -v ",
             "         --stack ", { "Ref" : "AWS::StackName" },
-            "         --resource ZookeeperInstance ",
+            "         --resource MasterInstance ",
             "         --configsets InstallAndRun ",
             "         --region ", { "Ref" : "AWS::Region" }, "\n"
           ]]}
@@ -580,7 +580,7 @@
       "Value" : {
         "Fn::Join" : [
           "", [
-            { "Fn::GetAtt" : [ "ZookeeperInstance", "PublicDnsName" ]},
+            { "Fn::GetAtt" : [ "MasterInstance", "PublicDnsName" ]},
             ":2181"
           ]
         ]
