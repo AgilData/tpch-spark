@@ -40,7 +40,7 @@ done
 
 DRIVER_IP=$(aws cloudformation describe-stacks --stack-name $UUID | jq '.Stacks[0].Outputs[1].OutputValue' | egrep -o "[0-9\.]*")
 
-echo "Spark Master http://$URL:8080/"
-echo "Kudu Master http://$URL:8051/"
-echo "Spark Driver http://$DRIVER_IP:4040/"
-echo "Logs http://$DRIVER_IP:80/log.txt"
+echo "Spark Master http://$DRIVER_IP:8080/"
+echo "Kudu Master http://$DRIVER_IP:8051/"
+echo "Spark Driver http://$URL:4040/"
+echo "Logs http://$URL:80/log.txt"
