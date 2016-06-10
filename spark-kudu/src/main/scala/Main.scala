@@ -46,6 +46,7 @@ object Main {
       .setMaster(SPARK_MASTER)
       .setAppName("TPC-H " + className)
       .setExecutorEnv("spark.executor.memory", EXEC_MEM)
+      .set("spark.serializer", "org.apache.spark.serializer.KryoSerializer")
     val sparkCtx = new SparkContext(conf)
     sparkCtx.addJar("/mnt/data/maven_repository/org/kududb/kudu-spark_2.11/1.0.0-SNAPSHOT/kudu-spark_2.11-1.0.0-SNAPSHOT.jar")
     val sqlCtx = new org.apache.spark.sql.SQLContext(sparkCtx)
