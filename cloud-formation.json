@@ -20,6 +20,14 @@
       "ConstraintDescription" : "must be between 1 and 128 EC2 instances."
     },
 
+    "DataVolumeSize": {
+      "Default": "50",
+      "Description" : "The size of the instance data volume in gigs",
+      "Type": "Number",
+      "MinValue": "50",
+      "ConstraintDescription" : "Must be > 50G"
+    },
+
     "WorkerMem": {
       "Default": "1G",
       "Description" : "Amount of memory to give Spark workers",
@@ -158,7 +166,7 @@
         ],
         "BlockDeviceMappings": [{
           "DeviceName": "/dev/sdb",
-          "Ebs" : {"VolumeSize": "100"}
+          "Ebs" : {"VolumeSize": { "Ref" : "DataVolumeSize" }}
         }],
         "UserData": {
           "Fn::Base64": { "Fn::Join":["", [
@@ -167,6 +175,8 @@
             "exec 3>&1 4>&2\n",
             "trap 'exec 2>&4 1>&3' 0 1 2 3\n",
             "exec 1>log.out 2>&1\n",
+
+            "xfs_growfs /mnt/data\n",
 
             "apt-get update\n",
             "apt-get -y install python-setuptools\n",
@@ -271,7 +281,7 @@
                   "export PATH=/opt/jdk1.8.0_91/bin/:/opt/apache-maven-3.3.9/bin/:$PATH\n",
                   "mkdir -p /mnt/data/kudu_data\n",
                   "chmod ugo+rw /mnt/data/kudu_data\n",
-                  "ln -s /mnt/data/kudu_data /var/lib/data",
+                  "ln -s /mnt/data/kudu_data /var/lib/kudu\n",
 
                   "cd /mnt/data/spark\n",
                   "./sbin/start-slave.sh --memory ", { "Ref" : "WorkerMem" }," spark://${ZOOKEEPER_ADDRESS}:7077 &\n",
@@ -308,7 +318,7 @@
         "KeyName" : { "Ref" : "KeyName" },
         "BlockDeviceMappings": [{
           "DeviceName": "/dev/sdb",
-          "Ebs" : {"VolumeSize": "100"}
+          "Ebs" : {"VolumeSize": { "Ref" : "DataVolumeSize" }}
         }],
         "UserData": {
           "Fn::Base64": { "Fn::Join":["", [
@@ -317,6 +327,8 @@
             "exec 3>&1 4>&2\n",
             "trap 'exec 2>&4 1>&3' 0 1 2 3\n",
             "exec 1>log.out 2>&1\n",
+
+            "xfs_growfs /mnt/data\n",
 
             "apt-get update\n",
             "apt-get -y install python-setuptools\n",
@@ -439,7 +451,7 @@
                   "export PATH=/opt/jdk1.8.0_91/bin/:/opt/apache-maven-3.3.9/bin/:$PATH\n",
                   "mkdir -p /mnt/data/kudu_data\n",
                   "chmod ugo+rw /mnt/data/kudu_data\n",
-                  "ln -s /mnt/data/kudu_data /var/lib/data",
+                  "ln -s /mnt/data/kudu_data /var/lib/kudu\n",
 
                   "cd /mnt/data/spark\n",
                   "./sbin/start-master.sh\n",
@@ -493,7 +505,7 @@
         ],
         "BlockDeviceMappings": [{
           "DeviceName": "/dev/sdb",
-          "Ebs" : {"VolumeSize": "100"}
+          "Ebs" : {"VolumeSize": { "Ref" : "DataVolumeSize" }}
         }],
         "UserData": {
           "Fn::Base64": { "Fn::Join":["", [
@@ -502,6 +514,8 @@
             "exec 3>&1 4>&2\n",
             "trap 'exec 2>&4 1>&3' 0 1 2 3\n",
             "exec 1>log.out 2>&1\n",
+
+            "xfs_growfs /mnt/data\n",
 
             "apt-get update\n",
             "apt-get -y install python-setuptools\n",

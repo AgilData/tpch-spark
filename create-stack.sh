@@ -1,4 +1,4 @@
-# Usage: ./create-stack.sh 2 5G m3.large 5G brent-keys2
+# Usage: ./create-stack.sh 2 5G m3.large 5G brent-keys2 50
 
 UUID='unknown'
 unamestr=`uname`
@@ -24,6 +24,7 @@ aws cloudformation create-stack \
 		ParameterKey=InstanceType,ParameterValue=$3 \
 		ParameterKey=WorkerMem,ParameterValue=$2 \
 		ParameterKey=ExecMem,ParameterValue=$4 \
+		ParameterKey=DataVolumeSize,ParameterValue=$6
 
 date1=$(date +"%s")
 
