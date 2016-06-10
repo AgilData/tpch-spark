@@ -153,6 +153,7 @@
                   "cd /mnt/data/tpch-spark/spark-kudu\n",
                   "sbt \"run --kuduMaster $ZOOKEEPER_ADDRESS:7051 --sparkMaster local[*] --inputDir /mnt/data/tpch-spark/dbgen/ --executorMemory ", { "Ref" : "ExecMem" }, " --mode populate\"\n",
 
+                  "nohup python -m SimpleHTTPServer 80 &\n",
                   "sbt \"run --kuduMaster $ZOOKEEPER_ADDRESS:7051 --sparkMaster spark://$ZOOKEEPER_ADDRESS:7077 -f src/main/resources/example_queries.csv --executorMemory 5g --mode csv\" > log.txt\n"
 
                 ]]}
@@ -695,16 +696,13 @@
 
 
   "Outputs" : {
-    "ZookeeperURL" : {
-      "Description" : "URL for Zookeeper",
-      "Value" : {
-        "Fn::Join" : [
-          "", [
-            { "Fn::GetAtt" : [ "MasterInstance", "PublicDnsName" ]},
-            ":2181"
-          ]
-        ]
-      }
+    "MasterIP" : {
+      "Description" : "IP of master",
+      "Value" : { "Fn::GetAtt" : [ "MasterInstance", "PublicIp" ]}
+    },
+    "TestRunnerIp" : {
+      "Description" : "IP of Spark Driver",
+      "Value" : { "Fn::GetAtt" : [ "TestRunner", "PublicIp" ]}
     }
   }
 }

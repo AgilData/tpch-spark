@@ -12,7 +12,7 @@ echo ParameterKey=KeyName,ParameterValue=$5
 echo ParameterKey=BrokerCapacity,ParameterValue=$1
 echo ParameterKey=InstanceType,ParameterValue=$3
 echo ParameterKey=WorkerMem,ParameterValue=$2
-echo ParameterKey=ExecMem,ParameterValue=$4 
+echo ParameterKey=ExecMem,ParameterValue=$4
 
 echo StackID=$UUID
 aws cloudformation create-stack \
@@ -27,16 +27,4 @@ aws cloudformation create-stack \
 		ParameterKey=ExecMem,ParameterValue=$4 \
 		ParameterKey=DataVolumeSize,ParameterValue=$6
 
-date1=$(date +"%s")
-
-URL=$(aws cloudformation describe-stacks --stack-name $UUID | jq '.Stacks[0].Outputs[0].OutputValue')
-while [ "$URL" = "null" ]
-do
-	sleep 15
-	date2=$(date +"%s")
-	diff=$(($date2-$date1))
-	echo "Polling $(($diff / 60))m $(($diff % 60))s $URL"
-	URL=$(aws cloudformation describe-stacks --stack-name $UUID | jq '.Stacks[0].Outputs[0].OutputValue')
-done
-
-echo URL=$URL
+UUID=$UUID ./poll.sh
