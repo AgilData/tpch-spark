@@ -147,7 +147,7 @@
               "test" : {
                 "command" : "sh /root/start-runner.sh",
                 "env" : {
-                  "ZOOKEEPER_ADDRESS": {"Fn::GetAtt" : ["MasterInstance", "PublicIp"]}
+                  "ZOOKEEPER_ADDRESS": {"Fn::GetAtt" : ["MasterInstance", "PrivateIp"]}
                 },
                 "cwd" : "~"
               }
@@ -304,7 +304,7 @@
               "agildata-install" : {
                 "command" : "sh /root/start-worker.sh",
                 "env" : {
-                  "ZOOKEEPER_ADDRESS": {"Fn::GetAtt" : ["MasterInstance", "PublicIp"]}
+                  "ZOOKEEPER_ADDRESS": {"Fn::GetAtt" : ["MasterInstance", "PrivateIp"]}
                 },
                 "cwd" : "~"
               }
