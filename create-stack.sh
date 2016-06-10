@@ -16,6 +16,7 @@ echo ParameterKey=ExecMem,ParameterValue=$4
 
 echo StackID=$UUID
 aws cloudformation create-stack \
+    --capabilities CAPABILITY_IAM \
 	--stack-name $UUID \
 	--template-body file://cloud-formation.json \
 	--parameters \
