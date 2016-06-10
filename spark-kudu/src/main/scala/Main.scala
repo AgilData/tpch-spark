@@ -33,7 +33,7 @@ object Main {
     val SPARK_MASTER = cmd.getOptionValue("s", "local[*]")
     val INPUT_DIR = cmd.getOptionValue("i", "./dbgen")
     val MODE = cmd.getOptionValue("m")
-    val EXEC_MEM = cmd.getOptionValue("e")
+    val EXEC_MEM = cmd.getOptionValue("e", "1g")
     val OUTPUT_DIR = "/tmp"
     println(s"KUDU_MASTER=$KUDU_MASTER")
     println(s"INPUT_DIR=$INPUT_DIR")
@@ -47,14 +47,19 @@ object Main {
       .setAppName("TPC-H " + className)
       .setExecutorEnv("spark.executor.memory", EXEC_MEM)
     val sparkCtx = new SparkContext(conf)
+    sparkCtx.addJar("/home/ubuntu/.m2/repository/org/kududb/kudu-spark_2.11/1.0.0-SNAPSHOT/kudu-spark_2.11-1.0.0-SNAPSHOT.jar")
     val sqlCtx = new org.apache.spark.sql.SQLContext(sparkCtx)
-    val kuduCtx = sparkCtx.broadcast(ExtendedKuduContext(KUDU_MASTER))
+    val kuduCtx = sparkCtx.broadcast(new ExtendedKuduContext(KUDU_MASTER))
     val execCtx = ExecCtx(sparkCtx, sqlCtx, kuduCtx)
 
     MODE match {
       case "populate" => Populate.executeImport(execCtx, INPUT_DIR)
       case "sql" => RunQueries.execute(execCtx, cmd.getOptionValue("q"))
-      case "csv" => new TpchQuery(execCtx).executeQueries(new File(cmd.getOptionValue("f")))
+      case "csv" => {
+        val file = new File(cmd.getOptionValue("f"))
+        val queryIdx = "*"
+        new TpchQuery(execCtx).executeQueries(file, queryIdx)
+      }
       case _ => println("first param required: must be populate, sql, or csv")
     }
   }

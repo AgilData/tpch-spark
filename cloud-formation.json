@@ -121,7 +121,9 @@
 
                   "echo ZOOKEEPER_ADDRESS=$ZOOKEEPER_ADDRESS\n",
                   "cd /mnt/data/tpch-spark/spark-kudu\n",
-                  "sbt \"run --kuduMaster $ZOOKEEPER_ADDRESS:7051 --sparkMaster spark://$ZOOKEEPER_ADDRESS:7077 --inputDir /mnt/data/tpch-spark/dbgen/ --executorMemory ", { "Ref" : "ExecMem" }, " --mode populate\"\n"
+                  "sbt \"run --kuduMaster $ZOOKEEPER_ADDRESS:7051 --sparkMaster local[*] --inputDir /mnt/data/tpch-spark/dbgen/ --executorMemory ", { "Ref" : "ExecMem" }, " --mode populate\"\n",
+
+                  "sbt \"run --kuduMaster $ZOOKEEPER_ADDRESS:7051 --sparkMaster spark://$ZOOKEEPER_ADDRESS:7077 -f esrc/main/resources/example_queries.csv --executorMemory 5g --mode csv\"\n"
 
                 ]]}
               },

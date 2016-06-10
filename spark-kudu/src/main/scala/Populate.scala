@@ -28,27 +28,27 @@ object Populate {
     val partsupp = sqlContext.createDataFrame(sc.textFile(inputDir + "/partsupp.tbl").map(_.split('|')).map(p => Partsupp(p(0).trim.toInt, p(1).trim.toInt, p(2).trim.toInt, p(3).trim.toDouble, p(4).trim)))
     val supplier = sqlContext.createDataFrame(sc.textFile(inputDir + "/supplier.tbl").map(_.split('|')).map(p => Supplier(p(0).trim.toInt, p(1).trim, p(2).trim, p(3).trim.toInt, p(4).trim, p(5).trim.toDouble, p(6).trim)))
 
-    writeToKudu(kuduContext, customer, "customer", "c_custkey")
-    writeToKudu(kuduContext, lineitem, "lineitem", "l_orderkey")
-    writeToKudu(kuduContext, nation, "nation", "n_nationkey")
-    writeToKudu(kuduContext, region, "region", "r_regionkey")
-    writeToKudu(kuduContext, order, "order", "o_orderkey")
-    writeToKudu(kuduContext, part, "part", "p_partkey")
-    writeToKudu(kuduContext, partsupp, "partsupp", "ps_partkey")
-    writeToKudu(kuduContext, supplier, "supplier", "s_suppkey")
+    writeToKudu(kuduContext, customer, "customer", List("c_custkey"))
+    writeToKudu(kuduContext, lineitem, "lineitem", List("l_orderkey", "l_linenumber"))
+    writeToKudu(kuduContext, nation, "nation", List("n_nationkey"))
+    writeToKudu(kuduContext, region, "region", List("r_regionkey"))
+    writeToKudu(kuduContext, order, "order", List("o_orderkey"))
+    writeToKudu(kuduContext, part, "part", List("p_partkey"))
+    writeToKudu(kuduContext, partsupp, "partsupp", List("ps_partkey", "ps_suppkey"))
+    writeToKudu(kuduContext, supplier, "supplier", List("s_suppkey"))
   }
 
-  def writeToKudu(kuduContext: Broadcast[ExtendedKuduContext], df: DataFrame, tableName: String, key: String): Unit = {
-    println(s"Importing $tableName with schema ${df.schema}")
+  def writeToKudu(kuduContext: Broadcast[ExtendedKuduContext], df: DataFrame, tableName: String, pk: Seq[String]): Unit = {
+    println(s"Importing ${df.count()} rows from $tableName with schema ${df.schema}")
     //df.show(10)
     val kc: ExtendedKuduContext = kuduContext.value
     if (kc.tableExists(tableName)) {
       kc.deleteTable(tableName)
     }
     val tableOptions = new CreateTableOptions()
-      .setRangePartitionColumns(List(key).asJava)
+      .setRangePartitionColumns(pk.asJava)
       .setNumReplicas(1) // TODO: Parameterize
-    kc.createTable(tableName, df.schema, Seq(0), tableOptions)
+    kc.createTable(tableName, df.schema, pk, tableOptions)
     kc.save(df, tableName)
   }
 
