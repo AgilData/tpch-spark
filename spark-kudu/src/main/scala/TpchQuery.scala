@@ -43,7 +43,7 @@ class TpchQuery(execCtx: ExecCtx) {
   def executeQueries(file: File, queryIdx: String): Unit = {
     val lines = Source.fromFile(file).getLines().toList
 
-    lines.indices.foreach(idx => {
+    (0 to 1).foreach(idx => {
       val line = lines(idx)
       if (!line.trim.startsWith("--")) {
         val t1 = System.currentTimeMillis()
