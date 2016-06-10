@@ -20,6 +20,14 @@
       "ConstraintDescription" : "must be between 1 and 128 EC2 instances."
     },
 
+    "DataVolumeSize": {
+      "Default": "50",
+      "Description" : "The size of the instance data volume in gigs",
+      "Type": "Number",
+      "MinValue": "50",
+      "ConstraintDescription" : "Must be > 50G"
+    },
+
     "WorkerMem": {
       "Default": "1G",
       "Description" : "Amount of memory to give Spark workers",
@@ -87,16 +95,18 @@
                   "exec 3>&1 4>&2\n",
                   "trap 'exec 2>&4 1>&3' 0 1 2 3\n",
                   "exec 1>log.out 2>&1\n",
-                  "export PATH=/home/ubuntu/sbt/bin/:/home/ubuntu/jdk1.8.0_91/bin/:/home/ubuntu/apache-maven-3.3.9/bin/:$PATH\n",
+                  "export PATH=/opt/sbt/bin/:/opt/jdk1.8.0_91/bin/:/opt/apache-maven-3.3.9/bin/:$PATH\n",
 
-                  "cd /home/ubuntu/\n",
+                  "cd /mnt/data/\n",
                   "git clone https://github.com/AgilData/tpch-spark.git\n",
-                  "cd /home/ubuntu/tpch-spark/dbgen/\n",
+                  "cd /mnt/data/tpch-spark/dbgen/\n",
                   "make clean\n",
                   "make\n",
 
-                  "cd /home/ubuntu/tpch-spark\n",
-                  "sudo ln -s /home/ubuntu/.m2/ /root/.m2\n",
+                  "cd /mnt/data/tpch-spark\n",
+                  "sudo mkdir -p /root/.m2\n",
+                  "sudo ln -s /mnt/data/maven_repository /root/.m2/repository\n",
+                  "sudo ln -s /mnt/data/ivy2 /root/.ivy2\n",
                   "sbt compile\n",
 
                   "echo Started Runner!\n",
@@ -106,12 +116,12 @@
                   "         --resource TestRunner ",
                   "         --region ", { "Ref" : "AWS::Region" }, "\n",
 
-                  "cd /home/ubuntu/tpch-spark/dbgen/\n",
+                  "cd /mnt/data/tpch-spark/dbgen/\n",
                   "./dbgen -qf -s 1\n",
 
                   "echo ZOOKEEPER_ADDRESS=$ZOOKEEPER_ADDRESS\n",
-                  "cd /home/ubuntu/tpch-spark/spark-kudu\n",
-                  "sbt \"run --kuduMaster $ZOOKEEPER_ADDRESS:7051 --sparkMaster spark://$ZOOKEEPER_ADDRESS:7077 --inputDir /home/ubuntu/tpch-spark/dbgen/ --executorMemory ", { "Ref" : "ExecMem" }, " --mode populate\"\n"
+                  "cd /mnt/data/tpch-spark/spark-kudu\n",
+                  "sbt \"run --kuduMaster $ZOOKEEPER_ADDRESS:7051 --sparkMaster spark://$ZOOKEEPER_ADDRESS:7077 --inputDir /mnt/data/tpch-spark/dbgen/ --executorMemory ", { "Ref" : "ExecMem" }, " --mode populate\"\n"
 
                 ]]}
               },
@@ -146,7 +156,7 @@
         }
       },
       "Properties": {
-        "ImageId" : "ami-2933cb44",
+        "ImageId" : "ami-e0de258d",
         "AvailabilityZone" : "us-east-1b",
         "InstanceType"   : { "Ref" : "InstanceType" },
         "SecurityGroups" : [ {"Ref" : "TestRunnerSecurityGroup"} ],
@@ -155,6 +165,10 @@
           { "Key" : "Name", "Value" : { "Fn::Join" : [ " ", [ "TestRunner", { "Ref" : "AWS::StackName" } ] ] }},
           {"Key" : "Billing Breakout", "Value" : "kudu_poc"}
         ],
+        "BlockDeviceMappings": [{
+          "DeviceName": "/dev/sdb",
+          "Ebs" : {"VolumeSize": { "Ref" : "DataVolumeSize" }}
+        }],
         "UserData": {
           "Fn::Base64": { "Fn::Join":["", [
             "#!/bin/bash -ex\n",
@@ -162,6 +176,8 @@
             "exec 3>&1 4>&2\n",
             "trap 'exec 2>&4 1>&3' 0 1 2 3\n",
             "exec 1>log.out 2>&1\n",
+
+            "xfs_growfs /mnt/data\n",
 
             "apt-get update\n",
             "apt-get -y install python-setuptools\n",
@@ -263,13 +279,14 @@
                   "exec 1>log.out 2>&1\n",
                   "\n",
 
-                  "export PATH=/home/ubuntu/jdk1.8.0_91/bin/:/home/ubuntu/apache-maven-3.3.9/bin/:$PATH\n",
-                  "mkdir -p /var/lib/kudu\n",
-                  "chmod ugo+rw /var/lib/kudu\n",
+                  "export PATH=/opt/jdk1.8.0_91/bin/:/opt/apache-maven-3.3.9/bin/:$PATH\n",
+                  "mkdir -p /mnt/data/kudu_data\n",
+                  "chmod ugo+rw /mnt/data/kudu_data\n",
+                  "ln -s /mnt/data/kudu_data /var/lib/kudu\n",
 
-                  "cd /home/ubuntu/spark\n",
+                  "cd /mnt/data/spark\n",
                   "./sbin/start-slave.sh --memory ", { "Ref" : "WorkerMem" }," spark://${ZOOKEEPER_ADDRESS}:7077 &\n",
-                  "cd /home/ubuntu/kudu/build/release\n",
+                  "cd /mnt/data/kudu/build/release\n",
                   "nohup bin/kudu-tserver -fs_wal_dir=/var/lib/kudu/tserver -tserver_master_addrs ${ZOOKEEPER_ADDRESS} -logtostderr -use_hybrid_clock=false -fs_wal_dir=/var/lib/kudu/tserver &\n",
 
                   "echo Started Worker!\n",
@@ -296,10 +313,14 @@
         }
       },
       "Properties": {
-        "ImageId" : "ami-2933cb44",
+        "ImageId" : "ami-e0de258d",
         "InstanceType" : { "Ref" : "InstanceType" },
         "SecurityGroups" : [ {"Ref" : "TServerSecurityGroup"} ],
         "KeyName" : { "Ref" : "KeyName" },
+        "BlockDeviceMappings": [{
+          "DeviceName": "/dev/sdb",
+          "Ebs" : {"VolumeSize": { "Ref" : "DataVolumeSize" }}
+        }],
         "UserData": {
           "Fn::Base64": { "Fn::Join":["", [
             "#!/bin/bash -ex\n",
@@ -307,6 +328,8 @@
             "exec 3>&1 4>&2\n",
             "trap 'exec 2>&4 1>&3' 0 1 2 3\n",
             "exec 1>log.out 2>&1\n",
+
+            "xfs_growfs /mnt/data\n",
 
             "apt-get update\n",
             "apt-get -y install python-setuptools\n",
@@ -393,14 +416,15 @@
                   "trap 'exec 2>&4 1>&3' 0 1 2 3\n",
                   "exec 1>log.out 2>&1\n",
 
-                  "export PATH=/home/ubuntu/jdk1.8.0_91/bin/:/home/ubuntu/apache-maven-3.3.9/bin/:$PATH\n",
-                  "mkdir -p /var/lib/kudu\n",
-                  "chmod ugo+rw /var/lib/kudu\n",
+                  "export PATH=/opt/jdk1.8.0_91/bin/:/opt/apache-maven-3.3.9/bin/:$PATH\n",
+                  "mkdir -p /mnt/data/kudu_data\n",
+                  "chmod ugo+rw /mnt/data/kudu_data\n",
+                  "ln -s /mnt/data/kudu_data /var/lib/kudu\n",
 
-                  "cd /home/ubuntu/spark\n",
+                  "cd /mnt/data/spark\n",
                   "./sbin/start-master.sh\n",
-                  "cd /home/ubuntu/kudu/build/release\n",
-                	"nohup bin/kudu-master -fs_wal_dir=/var/lib/kudu/master -logtostderr -use_hybrid_clock=false --webserver_doc_root=/home/ubuntu/kudu &\n",
+                  "cd /mnt/data/kudu/build/release\n",
+                	"nohup bin/kudu-master -fs_wal_dir=/var/lib/kudu/master -logtostderr -use_hybrid_clock=false --webserver_doc_root=/mnt/data/kudu &\n",
 
                   "echo Started Master!\n",
                   "echo Signal the status from cfn-init\n",
@@ -438,7 +462,7 @@
         }
       },
       "Properties": {
-        "ImageId" : "ami-2933cb44",
+        "ImageId" : "ami-e0de258d",
         "AvailabilityZone" : "us-east-1b",
         "InstanceType"   : { "Ref" : "InstanceType" },
         "SecurityGroups" : [ {"Ref" : "KuduSparkMasterSecurityGroup"} ],
@@ -447,6 +471,10 @@
           { "Key" : "Name", "Value" : { "Fn::Join" : [ " ", [ "Master", { "Ref" : "AWS::StackName" } ] ] }},
           {"Key" : "Billing Breakout", "Value" : "kudu_poc"}
         ],
+        "BlockDeviceMappings": [{
+          "DeviceName": "/dev/sdb",
+          "Ebs" : {"VolumeSize": { "Ref" : "DataVolumeSize" }}
+        }],
         "UserData": {
           "Fn::Base64": { "Fn::Join":["", [
             "#!/bin/bash -ex\n",
@@ -454,6 +482,8 @@
             "exec 3>&1 4>&2\n",
             "trap 'exec 2>&4 1>&3' 0 1 2 3\n",
             "exec 1>log.out 2>&1\n",
+
+            "xfs_growfs /mnt/data\n",
 
             "apt-get update\n",
             "apt-get -y install python-setuptools\n",
