@@ -47,7 +47,7 @@ object Main {
       .setAppName("TPC-H " + className)
       .setExecutorEnv("spark.executor.memory", EXEC_MEM)
     val sparkCtx = new SparkContext(conf)
-    sparkCtx.addJar("/home/ubuntu/.m2/repository/org/kududb/kudu-spark_2.11/1.0.0-SNAPSHOT/kudu-spark_2.11-1.0.0-SNAPSHOT.jar")
+    sparkCtx.addJar("/mnt/data/maven_repository/org/kududb/kudu-spark_2.11/1.0.0-SNAPSHOT/kudu-spark_2.11-1.0.0-SNAPSHOT.jar")
     val sqlCtx = new org.apache.spark.sql.SQLContext(sparkCtx)
     val kuduCtx = sparkCtx.broadcast(new ExtendedKuduContext(KUDU_MASTER))
     val execCtx = ExecCtx(sparkCtx, sqlCtx, kuduCtx)
