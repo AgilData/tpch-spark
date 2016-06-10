@@ -72,7 +72,37 @@
       "Metadata" : {
         "AWS::CloudFormation::Init" : {
           "configSets" : {
-            "InstallAndRun" : [ "Install", "Configure" ]
+            "InstallAndRun" : [ "Install", "Configure" ],
+            "PreInstall" : ["CloudWatch"]
+          },
+
+          "CloudWatch" : {
+            "files" : {
+              "/tmp/cwlogs/output.conf": {
+                "content": {
+                  "Fn::Join": [
+                    "",
+                    [
+                      "[general]\n",
+                      "state_file= /var/awslogs/agent-state\n",
+                      "[/root/log.out]\n",
+                      "file = /root/log.out\n",
+                      "log_group_name = ", {"Ref": "KudoPocLogGroup"}, "\n",
+                      "log_stream_name = {instance_id}/testrunnerlog.out\n",
+                      "datetime_format = %d/%b/%Y:%H:%M:%S\n",
+                      "[/boot.out]\n",
+                      "file = /root/log.out\n",
+                      "log_group_name = ", {"Ref": "KudoPocLogGroup"}, "\n",
+                      "log_stream_name = {instance_id}/testrunnerboot.out\n",
+                      "datetime_format = %d/%b/%Y:%H:%M:%S"
+                    ]
+                  ]
+                },
+                "mode": "000400",
+                "owner": "root",
+                "group": "root"
+              }
+            }
           },
 
           "Install" : {
@@ -162,6 +192,7 @@
         "AvailabilityZone" : "us-east-1b",
         "InstanceType"   : { "Ref" : "InstanceType" },
         "SecurityGroups" : [ {"Ref" : "TestRunnerSecurityGroup"} ],
+        "IamInstanceProfile": { "Ref": "LogRoleInstanceProfile" },
         "KeyName"        : { "Ref" : "KeyName" },
         "Tags" : [
           { "Key" : "Name", "Value" : { "Fn::Join" : [ " ", [ "TestRunner", { "Ref" : "AWS::StackName" } ] ] }},
@@ -177,7 +208,7 @@
             "set -x\n",
             "exec 3>&1 4>&2\n",
             "trap 'exec 2>&4 1>&3' 0 1 2 3\n",
-            "exec 1>log.out 2>&1\n",
+            "exec 1>boot.out 2>&1\n",
 
             "xfs_growfs /mnt/data\n",
 
@@ -186,6 +217,13 @@
             "mkdir aws-cfn-bootstrap-latest\n",
             "curl https://s3.amazonaws.com/cloudformation-examples/aws-cfn-bootstrap-latest.tar.gz | tar xz -C aws-cfn-bootstrap-latest --strip-components 1\n",
             "easy_install aws-cfn-bootstrap-latest\n",
+
+            "/usr/local/bin/cfn-init -s ", { "Ref": "AWS::StackId" }, " -r TestRunner ", " --configsets PreInstall ", " --region ", { "Ref": "AWS::Region" }, "\n",
+
+            "wget https://s3.amazonaws.com/aws-cloudwatch/downloads/latest/awslogs-agent-setup.py\n",
+
+            "python awslogs-agent-setup.py -n -r ", { "Ref" : "AWS::Region" }, " -c /tmp/cwlogs/output.conf || error_exit 'Failed to run CloudWatch Logs agent setup'\n",
+
             "\n",
             "echo Install the files and packages from the metadata\n",
             "/usr/local/bin/cfn-init -v ",
@@ -241,7 +279,41 @@
         "Comment2" : "The website content is downloaded from the CloudFormationPHPSample.zip file",
 
         "AWS::CloudFormation::Init" : {
-          "config" : {
+          "configSets" : {
+            "InstallAndRun" : [ "Install", "Configure" ],
+            "PreInstall" : ["CloudWatch"]
+          },
+
+          "CloudWatch" : {
+            "files" : {
+              "/tmp/cwlogs/output.conf": {
+                "content": {
+                  "Fn::Join": [
+                    "",
+                    [
+                      "[general]\n",
+                      "state_file= /var/awslogs/agent-state\n",
+                      "[/root/log.out]\n",
+                      "file = /root/log.out\n",
+                      "log_group_name = ", {"Ref": "KudoPocLogGroup"}, "\n",
+                      "log_stream_name = {instance_id}/tserverlog.out\n",
+                      "datetime_format = %d/%b/%Y:%H:%M:%S\n",
+                      "[/boot.out]\n",
+                      "file = /root/log.out\n",
+                      "log_group_name = ", {"Ref": "KudoPocLogGroup"}, "\n",
+                      "log_stream_name = {instance_id}/tserverboot.out\n",
+                      "datetime_format = %d/%b/%Y:%H:%M:%S"
+                    ]
+                  ]
+                },
+                "mode": "000400",
+                "owner": "root",
+                "group": "root"
+              }
+            }
+          },
+
+          "Install" : {
 
             "files" : {
 
@@ -300,8 +372,9 @@
 
                 ]]}
               }
-            },
-
+            }
+          },
+          "Configure" : {
             "commands" : {
               "agildata-install" : {
                 "command" : "sh /root/start-worker.sh",
@@ -318,6 +391,7 @@
         "ImageId" : "ami-e0de258d",
         "InstanceType" : { "Ref" : "InstanceType" },
         "SecurityGroups" : [ {"Ref" : "TServerSecurityGroup"} ],
+        "IamInstanceProfile": { "Ref": "LogRoleInstanceProfile" },
         "KeyName" : { "Ref" : "KeyName" },
         "BlockDeviceMappings": [{
           "DeviceName": "/dev/sdb",
@@ -329,7 +403,7 @@
             "set -x\n",
             "exec 3>&1 4>&2\n",
             "trap 'exec 2>&4 1>&3' 0 1 2 3\n",
-            "exec 1>log.out 2>&1\n",
+            "exec 1>boot.out 2>&1\n",
 
             "xfs_growfs /mnt/data\n",
 
@@ -338,7 +412,15 @@
             "mkdir aws-cfn-bootstrap-latest\n",
             "curl https://s3.amazonaws.com/cloudformation-examples/aws-cfn-bootstrap-latest.tar.gz | tar xz -C aws-cfn-bootstrap-latest --strip-components 1\n",
             "easy_install aws-cfn-bootstrap-latest\n",
-            "/usr/local/bin/cfn-init -v --stack ", { "Ref":"AWS::StackName" }, " --resource LaunchConfig", " --region ", { "Ref": "AWS::Region" }, "\n"
+
+            "/usr/local/bin/cfn-init -s ", { "Ref": "AWS::StackId" }, " -r LaunchConfig ", " --configsets PreInstall ", " --region ", { "Ref": "AWS::Region" }, "\n",
+
+            "wget https://s3.amazonaws.com/aws-cloudwatch/downloads/latest/awslogs-agent-setup.py\n",
+
+            "python awslogs-agent-setup.py -n -r ", { "Ref" : "AWS::Region" }, " -c /tmp/cwlogs/output.conf || error_exit 'Failed to run CloudWatch Logs agent setup'\n",
+
+
+            "/usr/local/bin/cfn-init -v --stack ", { "Ref":"AWS::StackName" }, " --resource LaunchConfig", " --configsets InstallAndRun ", " --region ", { "Ref": "AWS::Region" }, "\n"
           ]]}
         }
       }
@@ -394,7 +476,37 @@
       "Metadata" : {
         "AWS::CloudFormation::Init" : {
           "configSets" : {
-            "InstallAndRun" : [ "Install", "Configure" ]
+            "InstallAndRun" : [ "Install", "Configure" ],
+            "PreInstall" : ["CloudWatch"]
+          },
+
+          "CloudWatch" : {
+            "files" : {
+              "/tmp/cwlogs/output.conf": {
+                "content": {
+                  "Fn::Join": [
+                    "",
+                    [
+                      "[general]\n",
+                      "state_file= /var/awslogs/agent-state\n",
+                      "[/root/log.out]\n",
+                      "file = /root/log.out\n",
+                      "log_group_name = ", {"Ref": "KudoPocLogGroup"}, "\n",
+                      "log_stream_name = {instance_id}/masterlog.out\n",
+                      "datetime_format = %d/%b/%Y:%H:%M:%S\n",
+                      "[/boot.out]\n",
+                      "file = /root/log.out\n",
+                      "log_group_name = ", {"Ref": "KudoPocLogGroup"}, "\n",
+                      "log_stream_name = {instance_id}/masterboot.out\n",
+                      "datetime_format = %d/%b/%Y:%H:%M:%S"
+                    ]
+                  ]
+                },
+                "mode": "000400",
+                "owner": "root",
+                "group": "root"
+              }
+            }
           },
 
           "Install" : {
@@ -468,6 +580,7 @@
         "AvailabilityZone" : "us-east-1b",
         "InstanceType"   : { "Ref" : "InstanceType" },
         "SecurityGroups" : [ {"Ref" : "KuduSparkMasterSecurityGroup"} ],
+        "IamInstanceProfile": { "Ref": "LogRoleInstanceProfile" },
         "KeyName"        : { "Ref" : "KeyName" },
         "Tags" : [
           { "Key" : "Name", "Value" : { "Fn::Join" : [ " ", [ "Master", { "Ref" : "AWS::StackName" } ] ] }},
@@ -483,7 +596,7 @@
             "set -x\n",
             "exec 3>&1 4>&2\n",
             "trap 'exec 2>&4 1>&3' 0 1 2 3\n",
-            "exec 1>log.out 2>&1\n",
+            "exec 1>boot.out 2>&1\n",
 
             "xfs_growfs /mnt/data\n",
 
@@ -494,6 +607,14 @@
             "easy_install aws-cfn-bootstrap-latest\n",
             "\n",
             "echo Install the files and packages from the metadata\n",
+
+            "/usr/local/bin/cfn-init -s ", { "Ref": "AWS::StackId" }, " -r MasterInstance ", " --configsets PreInstall ", " --region ", { "Ref": "AWS::Region" }, "\n",
+
+            "wget https://s3.amazonaws.com/aws-cloudwatch/downloads/latest/awslogs-agent-setup.py\n",
+
+            "python awslogs-agent-setup.py -n -r ", { "Ref" : "AWS::Region" }, " -c /tmp/cwlogs/output.conf || error_exit 'Failed to run CloudWatch Logs agent setup'\n",
+
+
             "/usr/local/bin/cfn-init -v ",
             "         --stack ", { "Ref" : "AWS::StackName" },
             "         --resource MasterInstance ",
@@ -507,8 +628,71 @@
           "Timeout" : "PT15M"
         }
       }
+    },
+
+    "LogRole": {
+      "Type": "AWS::IAM::Role",
+      "Properties": {
+        "AssumeRolePolicyDocument": {
+          "Version": "2012-10-17",
+          "Statement": [
+            {
+              "Effect": "Allow",
+              "Principal": {
+                "Service": [
+                  "ec2.amazonaws.com"
+                ]
+              },
+              "Action": [
+                "sts:AssumeRole"
+              ]
+            }
+          ]
+        },
+        "Path": "/",
+        "Policies": [
+          {
+            "PolicyName": "LogRolePolicy",
+            "PolicyDocument": {
+              "Version": "2012-10-17",
+              "Statement": [
+                {
+                  "Effect": "Allow",
+                  "Action": [
+                    "logs:Create*",
+                    "logs:PutLogEvents",
+                    "s3:GetObject"
+                  ],
+                  "Resource": [
+                    "arn:aws:logs:*:*:*",
+                    "arn:aws:s3:::*"
+                  ]
+                }
+              ]
+            }
+          }
+        ]
+      }
+    },
+    "KudoPocLogGroup": {
+      "Type": "AWS::Logs::LogGroup",
+      "Properties": {
+        "RetentionInDays": 3
+      }
+    },
+    "LogRoleInstanceProfile": {
+      "Type": "AWS::IAM::InstanceProfile",
+      "Properties": {
+        "Path": "/",
+        "Roles": [
+          {
+            "Ref": "LogRole"
+          }
+        ]
+      }
     }
   },
+
 
   "Outputs" : {
     "ZookeeperURL" : {
