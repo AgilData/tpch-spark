@@ -516,12 +516,10 @@
     "MasterIP" : {
       "Description" : "IP of master",
       "Value" : { "Fn::GetAtt" : [ "MasterInstance", "PublicIp" ]}
-      }
     },
     "TestRunnerIp" : {
       "Description" : "IP of Spark Driver",
       "Value" : { "Fn::GetAtt" : [ "TestRunner", "PublicIp" ]}
-      }
     }
   }
 }
