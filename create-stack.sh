@@ -12,7 +12,7 @@ echo ParameterKey=KeyName,ParameterValue=$5
 echo ParameterKey=BrokerCapacity,ParameterValue=$1
 echo ParameterKey=InstanceType,ParameterValue=$3
 echo ParameterKey=WorkerMem,ParameterValue=$2
-echo ParameterKey=ExecMem,ParameterValue=$4 
+echo ParameterKey=ExecMem,ParameterValue=$4
 
 echo StackID=$UUID
 aws cloudformation create-stack \
@@ -38,4 +38,9 @@ do
 	URL=$(aws cloudformation describe-stacks --stack-name $UUID | jq '.Stacks[0].Outputs[0].OutputValue')
 done
 
-echo URL=$URL
+DRIVER_IP=$(aws cloudformation describe-stacks --stack-name $UUID | jq '.Stacks[0].Outputs[1].OutputValue')
+
+echo "Spark Master http://$URL:8080/"
+echo "Kudu Master http://$URL:8051/"
+echo "Spark Driver http://$DRIVER_IP:4040/"
+echo "Logs http://$DRIVER_IP:80/log.txt"
