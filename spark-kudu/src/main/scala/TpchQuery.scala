@@ -41,35 +41,21 @@ class TpchQuery(execCtx: ExecCtx) {
   val lineitem: DataFrame = sqlCtx.table("lineitem")
 
   def executeQueries(file: File, queryIdx: String): Unit = {
-    val repCount = 1
     val lines = Source.fromFile(file).getLines().toList
-    (0 until repCount).foreach((idx) => {
 
-      val indices = if ("*".equals(queryIdx)) lines.indices.toArray else Array(Integer.parseInt(queryIdx))
-      indices.foreach(idx => {
-        try {
-          val line = lines(idx)
-          if(!line.trim.startsWith("--")) {
-            val t1 = System.currentTimeMillis()
+    lines.indices.foreach(idx => {
+      val line = lines(idx)
+      if (!line.trim.startsWith("--")) {
+        val t1 = System.currentTimeMillis()
 
-            val df = execute(line)
+        println("------------ Running query $idx")
+        val df = execute(line)
+        df.show()
+        val cnt = df.count()
+        val t2 = System.currentTimeMillis()
 
-            df.schema.fields.foreach(f => print(f.name + "\t"))
-            println()
-            df.foreach(r => {
-              r.toSeq.foreach(c => print(c + "\t"))
-              println()
-            })
-
-            val t2 = System.currentTimeMillis()
-
-            println(s"Query $idx took ${t2-t1} ms to return ${df.count()} rows")
-          }
-        } catch {
-          case e: Exception => e.printStackTrace()
-        }
-      })
-
+        println(s"Query $idx took ${t2 - t1} ms to return $cnt rows")
+      }
     })
   }
 
