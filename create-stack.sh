@@ -28,17 +28,17 @@ aws cloudformation create-stack \
 
 date1=$(date +"%s")
 
-URL=$(aws cloudformation describe-stacks --stack-name $UUID | jq '.Stacks[0].Outputs[0].OutputValue')
+URL=$(aws cloudformation describe-stacks --stack-name $UUID | jq '.Stacks[0].Outputs[0].OutputValue' | egrep -o "[0-9\.]*")
 while [ "$URL" = "null" ]
 do
 	sleep 15
 	date2=$(date +"%s")
 	diff=$(($date2-$date1))
 	echo "Polling $(($diff / 60))m $(($diff % 60))s $URL"
-	URL=$(aws cloudformation describe-stacks --stack-name $UUID | jq '.Stacks[0].Outputs[0].OutputValue')
+	URL=$(aws cloudformation describe-stacks --stack-name $UUID | jq '.Stacks[0].Outputs[0].OutputValue' | egrep -o "[0-9\.]*")
 done
 
-DRIVER_IP=$(aws cloudformation describe-stacks --stack-name $UUID | jq '.Stacks[0].Outputs[1].OutputValue')
+DRIVER_IP=$(aws cloudformation describe-stacks --stack-name $UUID | jq '.Stacks[0].Outputs[1].OutputValue' | egrep -o "[0-9\.]*")
 
 echo "Spark Master http://$URL:8080/"
 echo "Kudu Master http://$URL:8051/"
