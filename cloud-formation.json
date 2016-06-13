@@ -43,7 +43,7 @@
     "ScaleFactor": {
       "Default": "1",
       "Description" : "TPC-H dbgen --scale-factor",
-      "Type": "ScaleFactor"
+      "Type": "Number"
     },
 
     "InstanceType" : {
