@@ -26,7 +26,7 @@ set rowcount -1
 go
 
 
--- Query 1 FAIL: Subquery in where clause
+-- Query 1 passes
 select
 	s_acctbal,
 	s_name,
@@ -101,7 +101,7 @@ set rowcount 10
 go
 
 
--- Query 3 FAIL: Subquery in where clause
+-- Query 3 Passes
 select
 	o_orderpriority,
 	count(*) as order_count

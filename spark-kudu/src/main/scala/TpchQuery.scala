@@ -152,63 +152,90 @@ class TpchQuery(execCtx: ExecCtx) {
     val mktSegment = q.param(1)
     val date = q.param(2)
 
-    val decrease = udf { (x: Double, y: Double) => x * (1 - y) }
-
-    val fcust = customer.filter($"c_mktsegment" === mktSegment)
-    val forders = order.filter($"o_orderdate" < date)
-    val flineitems = lineitem.filter($"l_shipdate" > date)
-
-    val res = fcust.join(forders, $"c_custkey" === forders("o_custkey"))
-      .select($"o_orderkey", $"o_orderdate", $"o_shippriority")
-      .join(flineitems, $"o_orderkey" === flineitems("l_orderkey"))
-      .select($"l_orderkey",
-        decrease($"l_extendedprice", $"l_discount").as("volume"),
-        $"o_orderdate", $"o_shippriority")
-      .groupBy($"l_orderkey", $"o_orderdate", $"o_shippriority")
-      .agg(sum($"volume").as("revenue"))
-      .sort($"revenue".desc, $"o_orderdate")
-
-    res
+    sqlCtx.sql(
+      s"""select
+	l_orderkey,
+	sum(l_extendedprice * (1 - l_discount)) as revenue,
+	o_orderdate,
+	o_shippriority
+from
+	customer,
+	`order`,
+	lineitem
+where
+	c_mktsegment = '$mktSegment'
+	and c_custkey = o_custkey
+	and l_orderkey = o_orderkey
+	and o_orderdate < cast('$date' as date)
+	and l_shipdate > cast('$date' as date)
+group by
+	l_orderkey,
+	o_orderdate,
+	o_shippriority
+order by
+	revenue desc,
+	o_orderdate
+""")
   }
 
   def q04(q: QueryParams): DataFrame = {
     val startDate = q.param(1)
-    val endDate = add(startDate, Calendar.MONTH, 3)
 
-    val forders = order.filter($"o_orderdate" >= startDate && $"o_orderdate" < endDate)
-
-    val flineitems = lineitem.filter($"l_commitdate" < $"l_receiptdate")
-      .select($"l_orderkey")
-      .distinct
-
-    val res = flineitems.join(forders, $"l_orderkey" === forders("o_orderkey"))
-      .groupBy($"o_orderpriority")
-      .agg(count($"o_orderpriority").as("order_count"))
-      .sort($"o_orderpriority")
-
-    res
+    sqlCtx.sql(
+      s"""select
+	o_orderpriority,
+	count(*) as order_count
+from
+	`order`
+where
+	o_orderdate >= cast( '$startDate' as date)
+	and o_orderdate < cast('$startDate' as date) + interval '3' month
+	and exists (
+		select
+			*
+		from
+			lineitem
+		where
+			l_orderkey = o_orderkey
+			and l_commitdate < l_receiptdate
+	)
+group by
+	o_orderpriority
+order by
+	o_orderpriority;
+"""
+    )
   }
 
   def q05(q: QueryParams): DataFrame = {
     val regionCode = q.param(1)
 
-    val decrease = udf { (x: Double, y: Double) => x * (1 - y) }
-
-    val forders = order.filter($"o_orderdate" < "1997-01-01" && $"o_orderdate" >= "1996-01-01")
-
-    val res = region.filter($"r_name" === regionCode)
-      .join(nation, $"r_regionkey" === nation("n_regionkey"))
-      .join(supplier, $"n_nationkey" === supplier("s_nationkey"))
-      .join(lineitem, $"s_suppkey" === lineitem("l_suppkey"))
-      .select($"n_name", $"l_extendedprice", $"l_discount", $"l_orderkey", $"s_nationkey")
-      .join(forders, $"l_orderkey" === forders("o_orderkey"))
-      .join(customer, $"o_custkey" === customer("c_custkey") && $"s_nationkey" === customer("c_nationkey"))
-      .select($"n_name", decrease($"l_extendedprice", $"l_discount").as("value"))
-      .groupBy($"n_name")
-      .agg(sum($"value").as("revenue"))
-      .sort($"revenue".desc)
-
-    res
+    sqlCtx.sql(
+      s"""select
+	n_name,
+	sum(l_extendedprice * (1 - l_discount)) as revenue
+from
+	customer,
+	`order`,
+	lineitem,
+	supplier,
+	nation,
+	region
+where
+	c_custkey = o_custkey
+	and l_orderkey = o_orderkey
+	and l_suppkey = s_suppkey
+	and c_nationkey = s_nationkey
+	and s_nationkey = n_nationkey
+	and n_regionkey = r_regionkey
+	and r_name = '$regionCode'
+	and o_orderdate >= cast('1996-01-01' as date)
+	and o_orderdate < cast('1996-01-01' as date) + interval '1' year
+group by
+	n_name
+order by
+	revenue desc;"""
+    )
   }
 
   def q06(q:QueryParams):DataFrame = {
