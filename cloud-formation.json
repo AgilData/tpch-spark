@@ -40,6 +40,12 @@
       "Type": "String"
     },
 
+    "ScaleFactor": {
+      "Default": "1",
+      "Description" : "TPC-H dbgen --scale-factor",
+      "Type": "ScaleFactor"
+    },
+
     "InstanceType" : {
       "Description" : "EC2 instance type",
       "Type" : "String",
@@ -147,7 +153,7 @@
                   "         --region ", { "Ref" : "AWS::Region" }, "\n",
 
                   "cd /mnt/data/tpch-spark/dbgen/\n",
-                  "./dbgen -qf -s 1\n",
+                  "./dbgen -qf -s ", { "Ref" : "ScaleFactor" }, "\n",
 
                   "echo ZOOKEEPER_ADDRESS=$ZOOKEEPER_ADDRESS\n",
                   "cd /mnt/data/tpch-spark/spark-kudu\n",
