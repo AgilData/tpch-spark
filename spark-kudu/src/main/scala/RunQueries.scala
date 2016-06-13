@@ -33,18 +33,11 @@ object RunQueries {
         val stmt = statements(idx)
         println(s"Starting Query Index $idx at ${new java.util.Date}")
         val start = System.currentTimeMillis()
-        try {
-          val df = execCtx.sqlCtx.sql(stmt)
-          val count = df.count()
-          val end = System.currentTimeMillis()
-          println(s"Got $count records in ${end - start}ms")
-          df.show()
-        } catch {
-          case e: Exception =>
-            println(s"$stmt \n")
-            e.printStackTrace
-        }
-
+        val df = execCtx.sqlCtx.sql(stmt)
+        val count = df.count()
+        val end = System.currentTimeMillis()
+        println(s"Got $count records in ${end - start}ms")
+        df.show()
       })
   }
 

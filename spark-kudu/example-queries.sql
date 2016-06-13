@@ -106,7 +106,7 @@ select
 	o_orderpriority,
 	count(*) as order_count
 from
-	orders
+	`order`
 where
 	o_orderdate >= cast( '1997-08-01' as date)
 	and o_orderdate < cast('1997-08-01' as date) + interval '3' month
@@ -186,7 +186,7 @@ from
 		from
 			supplier,
 			lineitem,
-			orders,
+			`order`,
 			customer,
 			nation n1,
 			nation n2
@@ -231,7 +231,7 @@ from
 			part,
 			supplier,
 			lineitem,
-			orders,
+			`order`,
 			customer,
 			nation n1,
 			nation n2,
@@ -272,7 +272,7 @@ from
 			supplier,
 			lineitem,
 			partsupp,
-			orders,
+			`order`,
 			nation
 		where
 			s_suppkey = l_suppkey
@@ -404,7 +404,7 @@ from
 			c_custkey,
 			count(o_orderkey)
 		from
-			customer left outer join orders on
+			customer left outer join `order` on
 				c_custkey = o_custkey
 				and o_comment not like '%unusual%deposits%'
 		group by
@@ -542,7 +542,7 @@ select
 	sum(l_quantity)
 from
 	customer,
-	orders,
+	`order`,
 	lineitem
 where
 	o_orderkey in (
@@ -658,7 +658,7 @@ select
 from
 	supplier,
 	lineitem l1,
-	orders,
+	`order`,
 	nation
 where
 	s_suppkey = l1.l_suppkey
@@ -724,7 +724,7 @@ from
 				select
 					*
 				from
-					orders
+					`order`
 				where
 					o_custkey = c_custkey
 			)
