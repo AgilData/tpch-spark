@@ -49,6 +49,7 @@ object Main {
       .set("spark.serializer", "org.apache.spark.serializer.KryoSerializer")
     val sparkCtx = new SparkContext(conf)
     sparkCtx.addJar("/mnt/data/maven_repository/org/kududb/kudu-spark_2.11/1.0.0-SNAPSHOT/kudu-spark_2.11-1.0.0-SNAPSHOT.jar")
+    sparkCtx.addJar("/mnt/data/tpch-spark/spark-kudu/target/scala-2.11/spark-tpc-h-queries_2.11-1.1-SNAPSHOT.jar")
     val sqlCtx = new org.apache.spark.sql.SQLContext(sparkCtx)
     val kuduCtx = sparkCtx.broadcast(new ExtendedKuduContext(KUDU_MASTER))
     val execCtx = ExecCtx(sparkCtx, sqlCtx, kuduCtx)
