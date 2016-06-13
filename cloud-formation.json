@@ -133,11 +133,11 @@
                   "make clean\n",
                   "make\n",
 
-                  "cd /mnt/data/tpch-spark\n",
+                  "cd /mnt/data/tpch-spark/spark-kudu\n",
                   "sudo mkdir -p /root/.m2\n",
                   "sudo ln -s /mnt/data/maven_repository /root/.m2/repository\n",
                   "sudo ln -s /mnt/data/ivy2 /root/.ivy2\n",
-                  "sbt compile\n",
+                  "sbt package\n",
 
                   "echo Started Runner!\n",
                   "echo Signal the status from cfn-init\n",
