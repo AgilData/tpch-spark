@@ -154,6 +154,7 @@
                   "sbt \"run --kuduMaster $ZOOKEEPER_ADDRESS:7051 --sparkMaster local[*] --inputDir /mnt/data/tpch-spark/dbgen/ --executorMemory ", { "Ref" : "ExecMem" }, " --mode populate\"\n",
 
                   "nohup python -m SimpleHTTPServer 80 &\n",
+                  "sbt package\n",
                   "sbt \"run --kuduMaster $ZOOKEEPER_ADDRESS:7051 --sparkMaster spark://$ZOOKEEPER_ADDRESS:7077 -f src/main/resources/example_queries.csv --executorMemory 5g --mode csv\" > log.txt\n"
 
                 ]]}
