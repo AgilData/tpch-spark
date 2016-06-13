@@ -202,7 +202,7 @@ where
 group by
 	o_orderpriority
 order by
-	o_orderpriority;
+	o_orderpriority
 """
     )
   }
@@ -234,7 +234,7 @@ where
 group by
 	n_name
 order by
-	revenue desc;"""
+	revenue desc"""
     )
   }
 
