@@ -365,12 +365,7 @@
                   "chmod ugo+rw /mnt/data/kudu_data\n",
                   "ln -s /mnt/data/kudu_data /var/lib/kudu\n",
 
-                  "echo \"*          hard    nproc    65536\" >> /etc/security/limits.conf\n",
-                  "echo \"*          soft    nproc    65536\" >> /etc/security/limits.conf\n",
-                  "echo \"*          hard    nofiles    65536\" >> /etc/security/limits.conf\n",
-                  "echo \"*          soft    nofiles    65536\" >> /etc/security/limits.conf\n",
-                  "ulimit -a\n",
-
+                  "ulimit -n 100000\n",
                   "cd /mnt/data/spark\n",
                   "./sbin/start-slave.sh --memory ", { "Ref" : "WorkerMem" }," spark://${ZOOKEEPER_ADDRESS}:7077 &\n",
                   "cd /mnt/data/kudu/build/release\n",
