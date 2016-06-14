@@ -41,7 +41,7 @@ class TpchQuery(execCtx: ExecCtx, result: Result) {
   val order: DataFrame = sqlCtx.table("`order`")
   val lineitem: DataFrame = sqlCtx.table("lineitem")
 
-  def executeQueries(file: File, queryIdx: String, mode: ResultHelper.Mode.Value): Unit = {
+  def executeQueries(file: File, queryIdx: String, mode: ResultHelper.Mode.Value, threadNo: Int = 0): Unit = {
     val lines = Source.fromFile(file).getLines().toList
 
     var count = 0
@@ -57,7 +57,7 @@ class TpchQuery(execCtx: ExecCtx, result: Result) {
         val q = getQuery(line)
         var cnt: Long = 0
 
-        ResultHelper.timeAndRecord(result, q.query, mode) {
+        ResultHelper.timeAndRecord(result, q.query, mode, threadNo) {
           val df = execute(q, mode)
           df.show()
           cnt = df.count()

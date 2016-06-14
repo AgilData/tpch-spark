@@ -89,7 +89,7 @@ object Main {
              new Callable[String]() {
               def call(): String = {
                 ResultHelper.timeAndRecord(result, i, ResultHelper.Mode.ThroughputE2E) {
-                  new TpchQuery(execCtx, result).executeQueries(file, queryIdx, ResultHelper.Mode.ThroughputQ)
+                  new TpchQuery(execCtx, result).executeQueries(file, queryIdx, ResultHelper.Mode.ThroughputQ, i)
                 }
                 "OK"
               }

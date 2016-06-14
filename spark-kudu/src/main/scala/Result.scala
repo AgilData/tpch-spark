@@ -8,7 +8,7 @@ import scala.math.BigDecimal.RoundingMode
 class Result(concurrency: Int) {
 
   val power : scala.collection.mutable.Map[Int, Long] = scala.collection.mutable.Map()
-  val throughputPerQ : scala.collection.mutable.Map[Int, ListBuffer[Long]] = scala.collection.mutable.Map()
+  val throughputPerQ : scala.collection.mutable.Map[Int, ListBuffer[(Int, Long)]] = scala.collection.mutable.Map()
   val throughputE2E: scala.collection.mutable.Map[Int, Long] = scala.collection.mutable.Map()
 
   def recordPowerRes(index: Int, time: Long): Unit = {
@@ -18,12 +18,12 @@ class Result(concurrency: Int) {
   }
 
   // Per query concurrent result
-  def recordThroughputQRes(index: Int, time: Long): Unit = {
+  def recordThroughputQRes(index: Int, time: Long, threadNo: Int): Unit = {
     throughputPerQ.synchronized {
       if (!throughputPerQ.contains(index)) {
-        throughputPerQ += (index -> ListBuffer(time))
+        throughputPerQ += (index -> ListBuffer((threadNo,time)))
       } else {
-        throughputPerQ.get(index).get += time
+        throughputPerQ.get(index).get += ((threadNo, time))
       }
     }
   }
@@ -63,8 +63,11 @@ class Result(concurrency: Int) {
     tpCsvOut.write("\n")
 
     throughputPerQ.toSeq.sortBy(_._1) foreach(t => {
+      val b = new StringBuilder(t._1)
+      // Sort by threadNo
+      t._2.toList.sortBy(_._1).foreach(e => b.append(",").append(e))
       val row = Seq(t._1) ++ t._2.toList
-      tpCsvOut.write(row.mkString(","))
+      tpCsvOut.write(b.toString())
       tpCsvOut.write("\n")
     })
     tpCsvOut.close()
@@ -80,7 +83,7 @@ class Result(concurrency: Int) {
       tpECsvOut.write(row.mkString(","))
       tpECsvOut.write("\n")
     })
-    tpCsvOut.close()
+    tpECsvOut.close()
 
 
   }
@@ -100,13 +103,13 @@ object ResultHelper {
     val Power, ThroughputQ, ThroughputE2E = Value
   }
 
-  def timeAndRecord[R](result: Result, index: Int, mode: Mode.Value)(block: => R): R = {
+  def timeAndRecord[R](result: Result, index: Int, mode: Mode.Value, threadNo: Int = 0)(block: => R): R = {
     val t0 = System.currentTimeMillis()
     val res = block    // call-by-name
     val t1 = System.currentTimeMillis()
     mode match {
       case Mode.Power => result.recordPowerRes(index, t1 - t0)
-      case Mode.ThroughputQ => result.recordThroughputQRes(index, t1 - t0)
+      case Mode.ThroughputQ => result.recordThroughputQRes(index, t1 - t0, threadNo)
       case Mode.ThroughputE2E => result.recordThroughputE2E(index, t1 - t0)
       case _ => throw new IllegalStateException()
     }
