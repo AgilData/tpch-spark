@@ -30,6 +30,8 @@ object Main {
     options.addOption("e", "executorMemory", true, "spark.executor.memory")
     options.addOption("u", "users", true, "Number of concurrent users for benchmark")
     options.addOption("p", "partitionCount", true, "spark.sql.shuffle.partitions")
+    options.addOption("w", "power", false, "run only the power benchmark")
+    options.addOption("t", "throughput", false, "run only the throughput benchmark")
 
     val parser = new BasicParser
     val cmd = parser.parse(options, args)

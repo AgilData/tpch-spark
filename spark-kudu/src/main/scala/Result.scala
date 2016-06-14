@@ -63,9 +63,10 @@ class Result(concurrency: Int) {
     tpCsvOut.write("\n")
 
     throughputPerQ.toSeq.sortBy(_._1) foreach(t => {
-      val b = new StringBuilder(t._1)
+      val b = new StringBuilder()
+      b.append(t._1)
       // Sort by threadNo
-      t._2.toList.sortBy(_._1).foreach(e => b.append(",").append(e))
+      t._2.toList.sortBy(_._1).foreach(e => b.append(",").append(e._2))
       val row = Seq(t._1) ++ t._2.toList
       tpCsvOut.write(b.toString())
       tpCsvOut.write("\n")
