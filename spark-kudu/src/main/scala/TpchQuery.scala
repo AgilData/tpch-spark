@@ -48,12 +48,8 @@ class TpchQuery(execCtx: ExecCtx, result: Result) {
   def executeQueries(file: File, queryIdx: String, mode: Mode.Value): Unit = {
     val lines = Source.fromFile(file).getLines().toList
 
-    var count = 0
 
     lines.indices.foreach(idx => {
-      if (count > 0) {
-        return
-      }
       val line = lines(idx)
       if (!line.trim.startsWith("--")) {
         val t1 = System.currentTimeMillis()
@@ -61,7 +57,7 @@ class TpchQuery(execCtx: ExecCtx, result: Result) {
         println("------------ Running query $idx")
         val q = getQuery(line)
         var cnt: Long = 0
-        
+
         timeAndRecord(q.query, mode) {
           val df = execute(q, mode)
           df.show()
@@ -72,7 +68,6 @@ class TpchQuery(execCtx: ExecCtx, result: Result) {
 
         println(s"Query $idx took ${t2 - t1} ms to return $cnt rows")
       }
-      count = count + 1
     })
   }
 
