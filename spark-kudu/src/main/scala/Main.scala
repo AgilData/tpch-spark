@@ -1,8 +1,9 @@
 package tpch
 
 import java.io.File
+import java.util.concurrent.{Callable, ExecutorService, Executors, FutureTask}
 
-import org.apache.commons.cli.{Options, BasicParser}
+import org.apache.commons.cli.{BasicParser, Options}
 import org.apache.spark.broadcast.Broadcast
 import org.apache.spark.sql.SQLContext
 import org.apache.spark.{SparkConf, SparkContext}
@@ -14,6 +15,8 @@ case class ExecCtx(sparkCtx: SparkContext, sqlCtx: SQLContext, kuduCtx: Broadcas
   * Created by andy on 5/6/16.
   */
 object Main {
+  val concurrency = 5 // TODO concurrency configurable
+
   def main(args: Array[String]): Unit = {
     Logger.getRootLogger.setLevel(Level.ERROR)
 
@@ -25,6 +28,7 @@ object Main {
     options.addOption("q", "queryFile", true, "queryFile")
     options.addOption("f", "file", true, "file")
     options.addOption("e", "executorMemory", true, "spark.executor.memory")
+    options.addOption("u", "users", true, "Number of concurrent users for benchmark")
     options.addOption("p", "partitionCount", true, "spark.sql.shuffle.partitions")
 
     val parser = new BasicParser
@@ -69,7 +73,33 @@ object Main {
       case "csv" => {
         val file = new File(cmd.getOptionValue("f"))
         val queryIdx = "*"
-        new TpchQuery(execCtx).executeQueries(file, queryIdx)
+        //val users = cmd.getOptionValue("u", concurrency)
+        val result = new Result(concurrency)
+
+        // Power (single thread)
+        new TpchQuery(execCtx, result).executeQueries(file, queryIdx, ResultHelper.Mode.Power)
+
+//        // Throughput (concurrency)
+//        val pool: ExecutorService = Executors.newFixedThreadPool(concurrency)
+//        val tasks = {
+//          for (i <- 1 to concurrency) yield
+//
+//             new Callable[String]() {
+//              def call(): String = {
+//                ResultHelper.timeAndRecord(result, i, ResultHelper.Mode.ThroughputE2E) {
+//                  new TpchQuery(execCtx, result).executeQueries(file, queryIdx, ResultHelper.Mode.ThroughputQ)
+//                }
+//                "OK"
+//              }
+//            }
+//
+//        }
+//
+//        import scala.collection.JavaConversions._
+//        pool.invokeAll(tasks.toList)
+//        pool.shutdown()
+
+        result.record("./tpch_result")
       }
       case _ => println("first param required: must be populate, sql, or csv")
     }

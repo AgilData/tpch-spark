@@ -5,6 +5,7 @@ import java.sql.Date
 import java.text.SimpleDateFormat
 import java.util.Calendar
 
+import org.apache.commons.math3.analysis.function.Power
 import org.apache.spark.sql.{DataFrame, SQLContext}
 import org.apache.spark.sql.functions._
 import org.kududb.spark.kudu._
@@ -12,7 +13,7 @@ import org.kududb.spark.kudu._
 import scala.io.Source
 
 /** Executes TPC-H analytics queries */
-class TpchQuery(execCtx: ExecCtx) {
+class TpchQuery(execCtx: ExecCtx, result: Result) {
   val master = execCtx.kuduCtx.value.kuduMaster
   val tableNames = Array(
     "partsupp",
@@ -40,8 +41,9 @@ class TpchQuery(execCtx: ExecCtx) {
   val order: DataFrame = sqlCtx.table("`order`")
   val lineitem: DataFrame = sqlCtx.table("lineitem")
 
-  def executeQueries(file: File, queryIdx: String): Unit = {
+  def executeQueries(file: File, queryIdx: String, mode: ResultHelper.Mode.Value): Unit = {
     val lines = Source.fromFile(file).getLines().toList
+
 
     lines.indices.foreach(idx => {
       val line = lines(idx)
@@ -49,9 +51,15 @@ class TpchQuery(execCtx: ExecCtx) {
         val t1 = System.currentTimeMillis()
 
         println("------------ Running query $idx")
-        val df = execute(line)
-        df.show()
-        val cnt = df.count()
+        val q = getQuery(line)
+        var cnt: Long = 0
+
+        ResultHelper.timeAndRecord(result, q.query, mode) {
+          val df = execute(q, mode)
+          df.show()
+          cnt = df.count()
+        }
+
         val t2 = System.currentTimeMillis()
 
         println(s"Query $idx took ${t2 - t1} ms to return $cnt rows")
@@ -59,9 +67,14 @@ class TpchQuery(execCtx: ExecCtx) {
     })
   }
 
-  def execute(l: String): DataFrame = {
+  def getQuery(l: String): QueryParams = {
     val data: Seq[String] = l.split(",").toSeq
-    val q = QueryParams(data(0).substring(1).toInt, data(1).toInt, data.slice(2, 99))
+    QueryParams(data(0).substring(1).toInt, data(1).toInt, data.slice(2, 99))
+  }
+
+  def execute(q: QueryParams, mode: ResultHelper.Mode.Value): DataFrame = {
+//    val data: Seq[String] = l.split(",").toSeq
+//    val q = QueryParams(data(0).substring(1).toInt, data(1).toInt, data.slice(2, 99))
     println(s"Executing: Query ${q.query} with limit ${q.limit} and params: ${q.params}")
 
     val res = q.query match {
