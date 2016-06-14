@@ -36,6 +36,7 @@ object Main {
     options.addOption("p", "partitionCount", true, "spark.sql.shuffle.partitions")
     options.addOption("w", "power", false, "run only the power benchmark")
     options.addOption("t", "throughput", false, "run only the throughput benchmark")
+    options.addOption("c", "scale-factor", true, "scale factor of data population")
 
     val parser = new BasicParser
     val cmd = parser.parse(options, args)
@@ -49,6 +50,11 @@ object Main {
         BenchMode.All
       }
     }
+
+    if (!cmd.hasOption("c")) {
+      throw new RuntimeException("Missing required arg: [-c, --scale-factor]")
+    }
+    val scaleFactor = Integer.parseInt(cmd.getOptionValue("c"))
 
     val KUDU_MASTER = cmd.getOptionValue("k", "127.0.0.1:7050")
     val SPARK_MASTER = cmd.getOptionValue("s", "local[*]")
@@ -96,7 +102,7 @@ object Main {
           case _ => concurrency
         }
 
-        val result = new Result(users)
+        val result = new Result(users, scaleFactor)
 
         benchMode match {
           case BenchMode.Power => executePower(result, execCtx, queryIdx, file)

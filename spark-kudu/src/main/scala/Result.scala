@@ -5,7 +5,7 @@ import java.io.{File, PrintWriter}
 import scala.collection.mutable.ListBuffer
 import scala.math.BigDecimal.RoundingMode
 
-class Result(concurrency: Int) {
+class Result(concurrency: Int, sf: Int) {
 
   val power : scala.collection.mutable.Map[Int, Long] = scala.collection.mutable.Map()
   val throughputPerQ : scala.collection.mutable.Map[Int, ListBuffer[(Int, Long)]] = scala.collection.mutable.Map()
@@ -86,14 +86,50 @@ class Result(concurrency: Int) {
     })
     tpECsvOut.close()
 
+    // record tpch metrics
+    val results = compute()
+    val resultFile = new File(dir, "result.csv")
+    val resultsFileOut = new PrintWriter(resultFile)
+
+    println(s"Writing TPCH Metric Results to ${resultFile.getAbsolutePath}")
+
+    resultsFileOut.write("Power@Size,Throughput@Size,QphH\n")
+    resultsFileOut.write(s"${results._1},${results._2},${results._3}")
+    resultsFileOut.close()
 
   }
 
   /*
   return tuple of (Power, Throughput, QphH)
+  see http://www.tpc.org/tpc_documents_current_versions/pdf/tpc-h_v2.17.1.pdf
    */
   def compute(): (Double, Double, Double) = {
-    throw new UnsupportedOperationException
+    val power = computePower()
+    val throughput = computeThroughput()
+    val qphh = computeQphH(power, throughput)
+
+    (power, throughput, qphh)
+  }
+
+  def computePower(): Double = {
+    val productTimes = {
+      var ret: Double = 0.0d
+      power.foreach(e => ret = ret * (e._2.toDouble / 1000))
+      ret
+    }
+
+    // TODO refresh functions?
+//    val productRF = 0.0d
+
+    (3600 * sf) / scala.math.pow(productTimes, 1d/24)
+  }
+
+  def computeThroughput(): Double = {
+    0.0d
+  }
+
+  def computeQphH(power: Double, throughput: Double): Double = {
+    0.0d
   }
 
 }
