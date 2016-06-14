@@ -117,7 +117,7 @@ class Result(concurrency: Int, sf: Int) {
     // TODO ratio thresholds
 
     val productTimes = {
-      var ret: Double = 0.0d
+      var ret: Double = 1d
       power.foreach(e => ret = ret * (e._2.toDouble / 1000))
       ret
     }
@@ -133,8 +133,9 @@ class Result(concurrency: Int, sf: Int) {
     val max = {
       var ret: Long = 0
       throughputE2E.foreach(e => {
-        if (ret < e._2) {
-          ret = e._2
+        val secs = e._2 / 1000
+        if (ret < secs) {
+          ret = secs
         }
       })
       ret
