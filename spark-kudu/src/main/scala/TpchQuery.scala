@@ -12,10 +12,6 @@ import org.kududb.spark.kudu._
 
 import scala.io.Source
 
-object Mode extends Enumeration {
-  val Power, Throughput = Value
-}
-
 /** Executes TPC-H analytics queries */
 class TpchQuery(execCtx: ExecCtx, result: Result) {
   val master = execCtx.kuduCtx.value.kuduMaster
@@ -45,7 +41,7 @@ class TpchQuery(execCtx: ExecCtx, result: Result) {
   val order: DataFrame = sqlCtx.table("`order`")
   val lineitem: DataFrame = sqlCtx.table("lineitem")
 
-  def executeQueries(file: File, queryIdx: String, mode: Mode.Value): Unit = {
+  def executeQueries(file: File, queryIdx: String, mode: ResultHelper.Mode.Value): Unit = {
     val lines = Source.fromFile(file).getLines().toList
 
 
@@ -58,7 +54,7 @@ class TpchQuery(execCtx: ExecCtx, result: Result) {
         val q = getQuery(line)
         var cnt: Long = 0
 
-        timeAndRecord(q.query, mode) {
+        ResultHelper.timeAndRecord(result, q.query, mode) {
           val df = execute(q, mode)
           df.show()
           cnt = df.count()
@@ -71,24 +67,12 @@ class TpchQuery(execCtx: ExecCtx, result: Result) {
     })
   }
 
-  def timeAndRecord[R](index: Int, mode: Mode.Value)(block: => R): R = {
-    val t0 = System.currentTimeMillis()
-    val res = block    // call-by-name
-    val t1 = System.currentTimeMillis()
-    mode match {
-      case Mode.Power => result.recordPowerRes(index, t1 - t0)
-      case Mode.Throughput => result.recordThroughputRes(index, t1 - t0)
-      case _ => throw new IllegalStateException()
-    }
-    res
-  }
-
   def getQuery(l: String): QueryParams = {
     val data: Seq[String] = l.split(",").toSeq
     QueryParams(data(0).substring(1).toInt, data(1).toInt, data.slice(2, 99))
   }
 
-  def execute(q: QueryParams, mode: Mode.Value): DataFrame = {
+  def execute(q: QueryParams, mode: ResultHelper.Mode.Value): DataFrame = {
 //    val data: Seq[String] = l.split(",").toSeq
 //    val q = QueryParams(data(0).substring(1).toInt, data(1).toInt, data.slice(2, 99))
     println(s"Executing: Query ${q.query} with limit ${q.limit} and params: ${q.params}")

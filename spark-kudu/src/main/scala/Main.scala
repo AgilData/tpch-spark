@@ -15,7 +15,7 @@ case class ExecCtx(sparkCtx: SparkContext, sqlCtx: SQLContext, kuduCtx: Broadcas
   * Created by andy on 5/6/16.
   */
 object Main {
-  val concurrency = 2 // TODO concurrency configurable
+  val concurrency = 5 // TODO concurrency configurable
 
   def main(args: Array[String]): Unit = {
     Logger.getRootLogger.setLevel(Level.ERROR)
@@ -28,6 +28,7 @@ object Main {
     options.addOption("q", "queryFile", true, "queryFile")
     options.addOption("f", "file", true, "file")
     options.addOption("e", "executorMemory", true, "spark.executor.memory")
+    options.addOption("u", "users", true, "Number of concurrent users for benchmark")
 
     val parser = new BasicParser
     val cmd = parser.parse(options, args)
@@ -63,10 +64,11 @@ object Main {
       case "csv" => {
         val file = new File(cmd.getOptionValue("f"))
         val queryIdx = "*"
+        //val users = cmd.getOptionValue("u", concurrency)
         val result = new Result(concurrency)
 
         // Power (single thread)
-        new TpchQuery(execCtx, result).executeQueries(file, queryIdx, Mode.Power)
+        new TpchQuery(execCtx, result).executeQueries(file, queryIdx, ResultHelper.Mode.Power)
 
         // Throughput (concurrency)
         val pool: ExecutorService = Executors.newFixedThreadPool(concurrency)
@@ -75,7 +77,9 @@ object Main {
 
              new Callable[String]() {
               def call(): String = {
-                new TpchQuery(execCtx, result).executeQueries(file, queryIdx, Mode.Throughput)
+                ResultHelper.timeAndRecord(result, i, ResultHelper.Mode.ThroughputE2E) {
+                  new TpchQuery(execCtx, result).executeQueries(file, queryIdx, ResultHelper.Mode.ThroughputQ)
+                }
                 "OK"
               }
             }

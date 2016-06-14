@@ -8,7 +8,8 @@ import scala.math.BigDecimal.RoundingMode
 class Result(concurrency: Int) {
 
   val power : scala.collection.mutable.Map[Int, Long] = scala.collection.mutable.Map()
-  val throughput : scala.collection.mutable.Map[Int, ListBuffer[Long]] = scala.collection.mutable.Map()
+  val throughputPerQ : scala.collection.mutable.Map[Int, ListBuffer[Long]] = scala.collection.mutable.Map()
+  val throughputE2E: scala.collection.mutable.Map[Int, Long] = scala.collection.mutable.Map()
 
   def recordPowerRes(index: Int, time: Long): Unit = {
     //val timeInSec = time.toDouble / 1000
@@ -16,13 +17,21 @@ class Result(concurrency: Int) {
     power += (index -> time)
   }
 
-  def recordThroughputRes(index: Int, time: Long): Unit = {
-    throughput.synchronized {
-      if (!throughput.contains(index)) {
-        throughput += (index -> ListBuffer(time))
+  // Per query concurrent result
+  def recordThroughputQRes(index: Int, time: Long): Unit = {
+    throughputPerQ.synchronized {
+      if (!throughputPerQ.contains(index)) {
+        throughputPerQ += (index -> ListBuffer(time))
       } else {
-        throughput.get(index).get += time
+        throughputPerQ.get(index).get += time
       }
+    }
+  }
+
+  // End to end concurrent result
+  def recordThroughputE2E(thread: Int, time: Long): Unit = {
+    throughputE2E.synchronized {
+      throughputE2E += (thread -> time)
     }
   }
 
@@ -34,7 +43,7 @@ class Result(concurrency: Int) {
 
     // record power
     val powerCsvOut = new PrintWriter(new File(dir, "power.csv"))
-    powerCsvOut.write("Query,Time(ms),ln()\n")
+    powerCsvOut.write("Query,Time(ms)\n")
     power.toSeq.sortBy(_._1) foreach( t => {
       val row = Seq(t._1) ++ Seq(t._2)
       powerCsvOut.write(row.mkString(","))
@@ -42,15 +51,25 @@ class Result(concurrency: Int) {
     })
     powerCsvOut.close()
 
-    // record throughput
-    val tpCsvOut = new PrintWriter(new File(dir, "throughput.csv"))
+    // record throughput, per query times
+    val tpCsvOut = new PrintWriter(new File(dir, "throughputPerQ.csv"))
     val b = new StringBuilder("Query")
     1 to concurrency foreach(n => b.append(",").append(s"time${n}(ms)"))
     tpCsvOut.write(b.toString())
     tpCsvOut.write("\n")
 
-    throughput.toSeq.sortBy(_._1) foreach( t => {
+    throughputPerQ.toSeq.sortBy(_._1) foreach(t => {
       val row = Seq(t._1) ++ t._2.toList
+      tpCsvOut.write(row.mkString(","))
+      tpCsvOut.write("\n")
+    })
+    tpCsvOut.close()
+
+    // record throughput, end to end
+    val tpECsvOut = new PrintWriter(new File(dir, "throughputE2E.csv"))
+    tpECsvOut.write("Thread,Time(ms)\n")
+    throughputE2E.toSeq.sortBy(_._1) foreach(t => {
+      val row = Seq(t._1) ++ Seq(t._2)
       tpCsvOut.write(row.mkString(","))
       tpCsvOut.write("\n")
     })
@@ -66,4 +85,24 @@ class Result(concurrency: Int) {
     throw new UnsupportedOperationException
   }
 
+}
+
+object ResultHelper {
+
+  object Mode extends Enumeration {
+    val Power, ThroughputQ, ThroughputE2E = Value
+  }
+
+  def timeAndRecord[R](result: Result, index: Int, mode: Mode.Value)(block: => R): R = {
+    val t0 = System.currentTimeMillis()
+    val res = block    // call-by-name
+    val t1 = System.currentTimeMillis()
+    mode match {
+      case Mode.Power => result.recordPowerRes(index, t1 - t0)
+      case Mode.ThroughputQ => result.recordThroughputQRes(index, t1 - t0)
+      case Mode.ThroughputE2E => result.recordThroughputE2E(index, t1 - t0)
+      case _ => throw new IllegalStateException()
+    }
+    res
+  }
 }
