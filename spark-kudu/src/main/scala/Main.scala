@@ -77,9 +77,11 @@ object Main {
         val result = new Result(concurrency)
 
         // Power (single thread)
+        println("Executing power benchmark...")
         new TpchQuery(execCtx, result).executeQueries(file, queryIdx, ResultHelper.Mode.Power)
 
         // Throughput (concurrency)
+        println(s"Executing throughput benchmark... Concurrency: $concurrency")
         val pool: ExecutorService = Executors.newFixedThreadPool(concurrency)
         val tasks = {
           for (i <- 1 to concurrency) yield

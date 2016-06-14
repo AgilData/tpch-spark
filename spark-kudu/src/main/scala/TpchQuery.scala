@@ -44,7 +44,7 @@ class TpchQuery(execCtx: ExecCtx, result: Result) {
   def executeQueries(file: File, queryIdx: String, mode: ResultHelper.Mode.Value): Unit = {
     val lines = Source.fromFile(file).getLines().toList
 
-    val count = 0
+    var count = 0
     lines.indices.foreach(idx => {
       val line = lines(idx)
       if (!line.trim.startsWith("--")) {

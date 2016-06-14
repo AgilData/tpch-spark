@@ -77,8 +77,8 @@ class Result(concurrency: Int) {
     tpECsvOut.write("Thread,Time(ms)\n")
     throughputE2E.toSeq.sortBy(_._1) foreach(t => {
       val row = Seq(t._1) ++ Seq(t._2)
-      tpCsvOut.write(row.mkString(","))
-      tpCsvOut.write("\n")
+      tpECsvOut.write(row.mkString(","))
+      tpECsvOut.write("\n")
     })
     tpCsvOut.close()
 
