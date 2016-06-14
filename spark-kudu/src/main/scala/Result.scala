@@ -35,7 +35,7 @@ class Result(concurrency: Int) {
     // record power
     val powerCsvOut = new PrintWriter(new File(dir, "power.csv"))
     powerCsvOut.write("Query,Time(ms),ln()\n")
-    power foreach( t => {
+    power.toSeq.sortBy(_._1) foreach( t => {
       val row = Seq(t._1) ++ Seq(t._2)
       powerCsvOut.write(row.mkString(","))
       powerCsvOut.write("\n")
@@ -49,7 +49,7 @@ class Result(concurrency: Int) {
     tpCsvOut.write(b.toString())
     tpCsvOut.write("\n")
 
-    throughput foreach( t => {
+    throughput.toSeq.sortBy(_._1) foreach( t => {
       val row = Seq(t._1) ++ t._2.toList
       tpCsvOut.write(row.mkString(","))
       tpCsvOut.write("\n")
@@ -57,6 +57,13 @@ class Result(concurrency: Int) {
     tpCsvOut.close()
 
 
+  }
+
+  /*
+  return tuple of Power, Throughput, QphH
+   */
+  def compute(): (BigDecimal, BigDecimal, BigDecimal) = {
+    throw new UnsupportedOperationException
   }
 
 }

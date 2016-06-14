@@ -73,14 +73,19 @@ object Main {
         val tasks = {
           for (i <- 1 to concurrency) yield
 
-             new FutureTask[String](new Callable[String]() {
+             new Callable[String]() {
               def call(): String = {
                 new TpchQuery(execCtx, result).executeQueries(file, queryIdx, Mode.Throughput)
                 "OK"
               }
-            })
+            }
 
         }
+
+        import scala.collection.JavaConversions._
+        pool.invokeAll(tasks.toList)
+        pool.shutdown()
+
         result.record("./tpch_result")
       }
       case _ => println("first param required: must be populate, sql, or csv")
