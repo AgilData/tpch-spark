@@ -2,6 +2,8 @@ package tpch
 
 import java.io.{File, PrintWriter}
 
+import scala.math.BigDecimal.RoundingMode
+
 class Result {
 
   val power : scala.collection.mutable.Map[Int, Seq[BigDecimal]] = scala.collection.mutable.Map()
@@ -9,7 +11,7 @@ class Result {
 
   def recordPowerRes(index: Int, time: Long): Unit = {
     val timeInSec = time.toDouble / 60
-    power += (index -> Seq(BigDecimal(timeInSec).setScale(2), BigDecimal(scala.math.log(timeInSec)).setScale(2)))
+    power += (index -> Seq(BigDecimal(timeInSec).setScale(2, RoundingMode.HALF_EVEN), BigDecimal(scala.math.log(timeInSec)).setScale(2, RoundingMode.HALF_EVEN)))
   }
 
   def record(dir: String): Unit = {
@@ -26,7 +28,6 @@ class Result {
       powerCsvOut.write(row.mkString(","))
     })
     powerCsvOut.close()
-
 
   }
 
