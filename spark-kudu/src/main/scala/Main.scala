@@ -1,8 +1,9 @@
 package tpch
 
 import java.io.File
+import java.util.concurrent.{Callable, ExecutorService, Executors, FutureTask}
 
-import org.apache.commons.cli.{Options, BasicParser}
+import org.apache.commons.cli.{BasicParser, Options}
 import org.apache.spark.broadcast.Broadcast
 import org.apache.spark.sql.SQLContext
 import org.apache.spark.{SparkConf, SparkContext}
@@ -14,6 +15,8 @@ case class ExecCtx(sparkCtx: SparkContext, sqlCtx: SQLContext, kuduCtx: Broadcas
   * Created by andy on 5/6/16.
   */
 object Main {
+  val concurrency = 2 // TODO concurrency configurable
+
   def main(args: Array[String]): Unit = {
     Logger.getRootLogger.setLevel(Level.ERROR)
 
@@ -60,8 +63,23 @@ object Main {
       case "csv" => {
         val file = new File(cmd.getOptionValue("f"))
         val queryIdx = "*"
-        val result = new Result
+        val result = new Result(concurrency)
+
+        // Power (single thread)
         new TpchQuery(execCtx, result).executeQueries(file, queryIdx, Mode.Power)
+
+        // Throughput (concurrency)
+        val pool: ExecutorService = Executors.newFixedThreadPool(concurrency)
+        val tasks = {
+          for (i <- 1 to concurrency) yield
+
+             new FutureTask(new Callable() {
+              def call(): Unit = {
+                new TpchQuery(execCtx, result).executeQueries(file, queryIdx, Mode.Throughput)
+              }
+            })
+
+        }
         result.record("./tpch_result")
       }
       case _ => println("first param required: must be populate, sql, or csv")

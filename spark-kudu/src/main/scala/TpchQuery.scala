@@ -77,7 +77,7 @@ class TpchQuery(execCtx: ExecCtx, result: Result) {
     val t1 = System.currentTimeMillis()
     mode match {
       case Mode.Power => result.recordPowerRes(index, t1 - t0)
-      case Mode.Throughput => throw new UnsupportedOperationException
+      case Mode.Throughput => result.recordThroughputRes(index, t1 - t0)
       case _ => throw new IllegalStateException()
     }
     res
