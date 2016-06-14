@@ -59,9 +59,15 @@ class TpchQuery(execCtx: ExecCtx, result: Result) {
         val t1 = System.currentTimeMillis()
 
         println("------------ Running query $idx")
-        val df = execute(line, mode)
-        df.show()
-        val cnt = df.count()
+        val q = getQuery(line)
+        var cnt: Long = 0
+        
+        timeAndRecord(q.query, mode) {
+          val df = execute(q, mode)
+          df.show()
+          cnt = df.count()
+        }
+
         val t2 = System.currentTimeMillis()
 
         println(s"Query $idx took ${t2 - t1} ms to return $cnt rows")
@@ -70,7 +76,7 @@ class TpchQuery(execCtx: ExecCtx, result: Result) {
     })
   }
 
-  def time[R](index: Int, mode: Mode.Value)(block: => R): R = {
+  def timeAndRecord[R](index: Int, mode: Mode.Value)(block: => R): R = {
     val t0 = System.currentTimeMillis()
     val res = block    // call-by-name
     val t1 = System.currentTimeMillis()
@@ -82,12 +88,17 @@ class TpchQuery(execCtx: ExecCtx, result: Result) {
     res
   }
 
-  def execute(l: String, mode: Mode.Value): DataFrame = {
+  def getQuery(l: String): QueryParams = {
     val data: Seq[String] = l.split(",").toSeq
-    val q = QueryParams(data(0).substring(1).toInt, data(1).toInt, data.slice(2, 99))
+    QueryParams(data(0).substring(1).toInt, data(1).toInt, data.slice(2, 99))
+  }
+
+  def execute(q: QueryParams, mode: Mode.Value): DataFrame = {
+//    val data: Seq[String] = l.split(",").toSeq
+//    val q = QueryParams(data(0).substring(1).toInt, data(1).toInt, data.slice(2, 99))
     println(s"Executing: Query ${q.query} with limit ${q.limit} and params: ${q.params}")
 
-    val res = time (q.query, mode) { q.query match {
+    val res = q.query match {
       case 1 => q01(q)
       case 2 => q02(q)
       case 3 => q03(q)
@@ -111,7 +122,7 @@ class TpchQuery(execCtx: ExecCtx, result: Result) {
       case 21 => q21(q)
       case 22 => q22(q)
       case _ => throw new RuntimeException(s"Query ${q.query} not implemented!")
-    }}
+    }
 
     q.limit match {
       case -1 => res
