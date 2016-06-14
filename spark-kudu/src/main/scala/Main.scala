@@ -73,9 +73,10 @@ object Main {
         val tasks = {
           for (i <- 1 to concurrency) yield
 
-             new FutureTask(new Callable() {
-              def call(): Unit = {
+             new FutureTask[String](new Callable[String]() {
+              def call(): String = {
                 new TpchQuery(execCtx, result).executeQueries(file, queryIdx, Mode.Throughput)
+                "OK"
               }
             })
 
