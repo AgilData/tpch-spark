@@ -52,6 +52,12 @@
       "Type": "Number"
     },
 
+    "BenchmarkUsers": {
+      "Default": "8",
+      "Description" : "Number of concurrent users for TestRunner",
+      "Type": "Number"
+    },
+
     "InstanceType" : {
       "Description" : "EC2 instance type",
       "Type" : "String",
@@ -106,6 +112,26 @@
                       "file = /root/log.out\n",
                       "log_group_name = ", {"Ref": "KudoPocLogGroup"}, "\n",
                       "log_stream_name = {instance_id}/testrunnerboot.out\n",
+                      "datetime_format = %d/%b/%Y:%H:%M:%S",
+                      "[/mnt/data/tpch-spark/spark-kudu/tpch_results/power.csv]\n",
+                      "file = /mnt/data/tpch-spark/spark-kudu/tpch_results/power.csv\n",
+                      "log_group_name = ", {"Ref": "KudoPocLogGroup"}, "\n",
+                      "log_stream_name = {instance_id}/power.csv\n",
+                      "datetime_format = %d/%b/%Y:%H:%M:%S",
+                      "[/mnt/data/tpch-spark/spark-kudu/tpch_results/throughputE2E.csv]\n",
+                      "file = /mnt/data/tpch-spark/spark-kudu/tpch_results/throughputE2E.csv\n",
+                      "log_group_name = ", {"Ref": "KudoPocLogGroup"}, "\n",
+                      "log_stream_name = {instance_id}/throughputE2E.csv\n",
+                      "datetime_format = %d/%b/%Y:%H:%M:%S"
+                      "[/mnt/data/tpch-spark/spark-kudu/tpch_results/throughputPerQ.csv]\n",
+                      "file = /mnt/data/tpch-spark/spark-kudu/tpch_results/throughputPerQ.csv\n",
+                      "log_group_name = ", {"Ref": "KudoPocLogGroup"}, "\n",
+                      "log_stream_name = {instance_id}/throughputPerQ.csv\n",
+                      "datetime_format = %d/%b/%Y:%H:%M:%S"
+                      "[/mnt/data/tpch-spark/spark-kudu/tpch_results/result.csv]\n",
+                      "file = /mnt/data/tpch-spark/spark-kudu/tpch_results/result.csv\n",
+                      "log_group_name = ", {"Ref": "KudoPocLogGroup"}, "\n",
+                      "log_stream_name = {instance_id}/result.csv\n",
                       "datetime_format = %d/%b/%Y:%H:%M:%S"
                     ]
                   ]
@@ -151,13 +177,6 @@
                   "sudo ln -s /mnt/data/ivy2 /root/.ivy2\n",
                   "sbt package\n",
 
-                  "echo Started Runner!\n",
-                  "echo Signal the status from cfn-init\n",
-                  "/usr/local/bin/cfn-signal -e $? ",
-                  "         --stack ", { "Ref" : "AWS::StackName" },
-                  "         --resource TestRunner ",
-                  "         --region ", { "Ref" : "AWS::Region" }, "\n",
-
                   "cd /mnt/data/tpch-spark/dbgen/\n",
                   "./dbgen -qf -s ", { "Ref" : "ScaleFactor" }, "\n",
 
@@ -176,7 +195,18 @@
                   "   -f src/main/resources/example_queries.csv ",
                   "   --partitionCount ", { "Ref" : "PartitionCount" },
                   "   --executorMemory ", { "Ref" : "ExecMem" },
+                  "   -c ", { "Ref" : "ScaleFactor"},
+                  "   -u ", { "Ref" : "BenchUsers" },
                   "   --mode csv\" > log.txt\n"
+
+
+
+                  "echo Finished Benchmark!\n",
+                  "echo Signal the status from cfn-init\n",
+                  "/usr/local/bin/cfn-signal -e $? ",
+                  "         --stack ", { "Ref" : "AWS::StackName" },
+                  "         --resource TestRunner ",
+                  "         --region ", { "Ref" : "AWS::Region" }, "\n",
 
                 ]]}
               },

@@ -1,4 +1,4 @@
-# Usage: ./create-stack.sh 2 5G m3.large 5G brent-keys2 50 1 20
+# Usage: ./create-stack.sh 2 5G m3.large 5G brent-keys2 50 1 20 8
 
 UUID='unknown'
 unamestr=`uname`
@@ -16,6 +16,7 @@ echo ParameterKey=KeyName,ParameterValue=$5
 echo ParameterKey=DataVolumeSize,ParameterValue=$6
 echo ParameterKey=ScaleFactor,ParameterValue=$7
 echo ParameterKey=PartitionCount,ParameterValue=$8
+echo ParameterKey=BenchmarkUsers,ParameterValue=$9
 
 echo StackID=$UUID
 aws cloudformation create-stack \
@@ -30,6 +31,7 @@ aws cloudformation create-stack \
 		ParameterKey=ExecMem,ParameterValue=$4 \
 		ParameterKey=DataVolumeSize,ParameterValue=$6 \
 		ParameterKey=ScaleFactor,ParameterValue=$7 \
-		ParameterKey=PartitionCount,ParameterValue=$8
+		ParameterKey=PartitionCount,ParameterValue=$8 \
+		ParameterKey=BenchmarkUsers,ParameterValue=$9
 
 UUID=$UUID ./poll.sh
