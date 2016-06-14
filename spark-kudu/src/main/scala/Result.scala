@@ -129,11 +129,13 @@ class Result(concurrency: Int, sf: Int) {
   }
 
   //TPC-H Throughput@Size = (S*22*3600)/Ts *SF
+  // See http://www.tpc.org/tpc_documents_current_versions/pdf/tpc-h_v2.17.1.pdf
+  // section 5.4.2.1
   def computeThroughput(): Double = {
     val max = {
-      var ret: Long = 0
+      var ret: Double = 0d
       throughputE2E.foreach(e => {
-        val secs = e._2 / 1000
+        val secs = e._2.toDouble / 1000
         if (ret < secs) {
           ret = secs
         }

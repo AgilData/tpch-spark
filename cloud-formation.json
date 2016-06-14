@@ -122,12 +122,12 @@
                       "file = /mnt/data/tpch-spark/spark-kudu/tpch_results/throughputE2E.csv\n",
                       "log_group_name = ", {"Ref": "KudoPocLogGroup"}, "\n",
                       "log_stream_name = {instance_id}/throughputE2E.csv\n",
-                      "datetime_format = %d/%b/%Y:%H:%M:%S"
+                      "datetime_format = %d/%b/%Y:%H:%M:%S",
                       "[/mnt/data/tpch-spark/spark-kudu/tpch_results/throughputPerQ.csv]\n",
                       "file = /mnt/data/tpch-spark/spark-kudu/tpch_results/throughputPerQ.csv\n",
                       "log_group_name = ", {"Ref": "KudoPocLogGroup"}, "\n",
                       "log_stream_name = {instance_id}/throughputPerQ.csv\n",
-                      "datetime_format = %d/%b/%Y:%H:%M:%S"
+                      "datetime_format = %d/%b/%Y:%H:%M:%S",
                       "[/mnt/data/tpch-spark/spark-kudu/tpch_results/result.csv]\n",
                       "file = /mnt/data/tpch-spark/spark-kudu/tpch_results/result.csv\n",
                       "log_group_name = ", {"Ref": "KudoPocLogGroup"}, "\n",
@@ -196,17 +196,15 @@
                   "   --partitionCount ", { "Ref" : "PartitionCount" },
                   "   --executorMemory ", { "Ref" : "ExecMem" },
                   "   -c ", { "Ref" : "ScaleFactor"},
-                  "   -u ", { "Ref" : "BenchUsers" },
-                  "   --mode csv\" > log.txt\n"
-
-
+                  "   -u ", { "Ref" : "BenchmarkUsers" },
+                  "   --mode csv\" > log.txt\n",
 
                   "echo Finished Benchmark!\n",
                   "echo Signal the status from cfn-init\n",
                   "/usr/local/bin/cfn-signal -e $? ",
                   "         --stack ", { "Ref" : "AWS::StackName" },
                   "         --resource TestRunner ",
-                  "         --region ", { "Ref" : "AWS::Region" }, "\n",
+                  "         --region ", { "Ref" : "AWS::Region" }, "\n"
 
                 ]]}
               },
