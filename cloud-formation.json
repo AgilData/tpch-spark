@@ -46,6 +46,12 @@
       "Type": "Number"
     },
 
+    "PartitionCount": {
+      "Default": "20",
+      "Description" : "spark.sql.shuffle.partitions",
+      "Type": "Number"
+    },
+
     "InstanceType" : {
       "Description" : "EC2 instance type",
       "Type" : "String",
@@ -157,10 +163,20 @@
 
                   "echo ZOOKEEPER_ADDRESS=$ZOOKEEPER_ADDRESS\n",
                   "cd /mnt/data/tpch-spark/spark-kudu\n",
-                  "sbt \"run --kuduMaster $ZOOKEEPER_ADDRESS:7051 --sparkMaster local[*] --inputDir /mnt/data/tpch-spark/dbgen/ --executorMemory ", { "Ref" : "ExecMem" }, " --mode populate\"\n",
+                  "sbt \"run --kuduMaster $ZOOKEEPER_ADDRESS:7051 ",
+                  "   --sparkMaster local[*] ",
+                  "   --inputDir /mnt/data/tpch-spark/dbgen/ ",
+                  "   --partitionCount ", { "Ref" : "PartitionCount" },
+                  "   --executorMemory ", { "Ref" : "ExecMem" },
+                  "   --mode populate\"\n",
 
                   "nohup python -m SimpleHTTPServer 80 &\n",
-                  "sbt \"run --kuduMaster $ZOOKEEPER_ADDRESS:7051 --sparkMaster spark://$ZOOKEEPER_ADDRESS:7077 -f src/main/resources/example_queries.csv --executorMemory 5g --mode csv\" > log.txt\n"
+                  "sbt \"run --kuduMaster $ZOOKEEPER_ADDRESS:7051 ",
+                  "   --sparkMaster spark://$ZOOKEEPER_ADDRESS:7077 ",
+                  "   -f src/main/resources/example_queries.csv ",
+                  "   --partitionCount ", { "Ref" : "PartitionCount" },
+                  "   --executorMemory ", { "Ref" : "ExecMem" },
+                  "   --mode csv\" > log.txt\n"
 
                 ]]}
               },
@@ -365,12 +381,7 @@
                   "chmod ugo+rw /mnt/data/kudu_data\n",
                   "ln -s /mnt/data/kudu_data /var/lib/kudu\n",
 
-                  "echo \"*          hard    nproc    65536\" >> /etc/security/limits.conf\n",
-                  "echo \"*          soft    nproc    65536\" >> /etc/security/limits.conf\n",
-                  "echo \"*          hard    nofiles    65536\" >> /etc/security/limits.conf\n",
-                  "echo \"*          soft    nofiles    65536\" >> /etc/security/limits.conf\n",
-                  "ulimit -a\n",
-
+                  "ulimit -n 100000\n",
                   "cd /mnt/data/spark\n",
                   "./sbin/start-slave.sh --memory ", { "Ref" : "WorkerMem" }," spark://${ZOOKEEPER_ADDRESS}:7077 &\n",
                   "cd /mnt/data/kudu/build/release\n",

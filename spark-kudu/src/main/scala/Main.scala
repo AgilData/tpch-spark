@@ -29,6 +29,7 @@ object Main {
     options.addOption("f", "file", true, "file")
     options.addOption("e", "executorMemory", true, "spark.executor.memory")
     options.addOption("u", "users", true, "Number of concurrent users for benchmark")
+    options.addOption("p", "partitionCount", true, "spark.sql.shuffle.partitions")
 
     val parser = new BasicParser
     val cmd = parser.parse(options, args)
@@ -38,11 +39,13 @@ object Main {
     val INPUT_DIR = cmd.getOptionValue("i", "./dbgen")
     val MODE = cmd.getOptionValue("m")
     val EXEC_MEM = cmd.getOptionValue("e", "1g")
+    val PARTITION_COUNT = cmd.getOptionValue("p", "20")
     val OUTPUT_DIR = "/tmp"
     println(s"KUDU_MASTER=$KUDU_MASTER")
     println(s"INPUT_DIR=$INPUT_DIR")
     println(s"SPARK_MASTER=$SPARK_MASTER")
     println(s"EXEC_MEM=$EXEC_MEM")
+    println(s"PARTITION_COUNT=$PARTITION_COUNT")
 
     // get the name of the class excluding dollar signs and package
     val className = this.getClass.getName.split("\\.").last.replaceAll("\\$", "")
@@ -50,6 +53,12 @@ object Main {
       .setMaster(SPARK_MASTER)
       .setAppName("TPC-H " + className)
       .setExecutorEnv("spark.executor.memory", EXEC_MEM)
+      .setExecutorEnv("spark.sql.tungsten.enabled", "true")
+      .setExecutorEnv("spark.sql.shuffle.partitions", PARTITION_COUNT)
+      .setExecutorEnv("spark.serializer", "org.apache.spark.serializer.KryoSerializer")
+      .set("spark.executor.memory", EXEC_MEM)
+      .set("spark.sql.tungsten.enabled", "true")
+      .set("spark.sql.shuffle.partitions", PARTITION_COUNT)
       .set("spark.serializer", "org.apache.spark.serializer.KryoSerializer")
     val sparkCtx = new SparkContext(conf)
     sparkCtx.addJar("/mnt/data/maven_repository/org/kududb/kudu-spark_2.11/1.0.0-SNAPSHOT/kudu-spark_2.11-1.0.0-SNAPSHOT.jar")
@@ -70,25 +79,25 @@ object Main {
         // Power (single thread)
         new TpchQuery(execCtx, result).executeQueries(file, queryIdx, ResultHelper.Mode.Power)
 
-        // Throughput (concurrency)
-        val pool: ExecutorService = Executors.newFixedThreadPool(concurrency)
-        val tasks = {
-          for (i <- 1 to concurrency) yield
-
-             new Callable[String]() {
-              def call(): String = {
-                ResultHelper.timeAndRecord(result, i, ResultHelper.Mode.ThroughputE2E) {
-                  new TpchQuery(execCtx, result).executeQueries(file, queryIdx, ResultHelper.Mode.ThroughputQ)
-                }
-                "OK"
-              }
-            }
-
-        }
-
-        import scala.collection.JavaConversions._
-        pool.invokeAll(tasks.toList)
-        pool.shutdown()
+//        // Throughput (concurrency)
+//        val pool: ExecutorService = Executors.newFixedThreadPool(concurrency)
+//        val tasks = {
+//          for (i <- 1 to concurrency) yield
+//
+//             new Callable[String]() {
+//              def call(): String = {
+//                ResultHelper.timeAndRecord(result, i, ResultHelper.Mode.ThroughputE2E) {
+//                  new TpchQuery(execCtx, result).executeQueries(file, queryIdx, ResultHelper.Mode.ThroughputQ)
+//                }
+//                "OK"
+//              }
+//            }
+//
+//        }
+//
+//        import scala.collection.JavaConversions._
+//        pool.invokeAll(tasks.toList)
+//        pool.shutdown()
 
         result.record("./tpch_result")
       }
