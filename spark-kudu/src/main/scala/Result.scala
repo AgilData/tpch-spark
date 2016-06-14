@@ -111,7 +111,11 @@ class Result(concurrency: Int, sf: Int) {
     (power, throughput, qphh)
   }
 
+  // See http://www.tpc.org/tpc_documents_current_versions/pdf/tpc-h_v2.17.1.pdf
+  // section 5.4.1.1
   def computePower(): Double = {
+    // TODO ratio thresholds
+
     val productTimes = {
       var ret: Double = 0.0d
       power.foreach(e => ret = ret * (e._2.toDouble / 1000))
@@ -124,12 +128,24 @@ class Result(concurrency: Int, sf: Int) {
     (3600 * sf) / scala.math.pow(productTimes, 1d/24)
   }
 
+  //TPC-H Throughput@Size = (S*22*3600)/Ts *SF
   def computeThroughput(): Double = {
-    0.0d
+    val max = {
+      var ret: Long = 0
+      throughputE2E.foreach(e => {
+        if (ret < e._2) {
+          ret = e._2
+        }
+      })
+      ret
+    }
+    (concurrency * 22 * 3600) / max * sf
   }
 
+  // See http://www.tpc.org/tpc_documents_current_versions/pdf/tpc-h_v2.17.1.pdf
+  // section 5.4.3.1
   def computeQphH(power: Double, throughput: Double): Double = {
-    0.0d
+    scala.math.sqrt(power * throughput)
   }
 
 }
