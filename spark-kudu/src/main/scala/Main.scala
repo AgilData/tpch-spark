@@ -60,7 +60,9 @@ object Main {
       case "csv" => {
         val file = new File(cmd.getOptionValue("f"))
         val queryIdx = "*"
-        new TpchQuery(execCtx).executeQueries(file, queryIdx)
+        val result = new Result
+        new TpchQuery(execCtx, result).executeQueries(file, queryIdx, Mode.Power)
+        result.record("./tpch_result")
       }
       case _ => println("first param required: must be populate, sql, or csv")
     }
