@@ -11,7 +11,7 @@ class Result {
 
   def recordPowerRes(index: Int, time: Long): Unit = {
     val timeInSec = time.toDouble / 1000
-    power += (index -> Seq(BigDecimal(timeInSec).setScale(2, RoundingMode.HALF_EVEN), BigDecimal(scala.math.log10(timeInSec)).setScale(2, RoundingMode.HALF_EVEN)))
+    power += (index -> Seq(BigDecimal(timeInSec).setScale(2, RoundingMode.HALF_EVEN), BigDecimal(scala.math.log(timeInSec)).setScale(2, RoundingMode.HALF_EVEN)))
   }
 
   def record(dir: String): Unit = {
