@@ -51,11 +51,6 @@ object Main {
       }
     }
 
-    if (!cmd.hasOption("c")) {
-      throw new RuntimeException("Missing required arg: [-c, --scale-factor]")
-    }
-    val scaleFactor = Integer.parseInt(cmd.getOptionValue("c"))
-
     val KUDU_MASTER = cmd.getOptionValue("k", "127.0.0.1:7050")
     val SPARK_MASTER = cmd.getOptionValue("s", "local[*]")
     val INPUT_DIR = cmd.getOptionValue("i", "./dbgen")
@@ -93,6 +88,12 @@ object Main {
       case "populate" => Populate.executeImport(execCtx, INPUT_DIR)
       case "sql" => RunQueries.execute(execCtx, cmd.getOptionValue("q"))
       case "csv" => {
+
+        if (!cmd.hasOption("c")) {
+          throw new RuntimeException("Missing required arg: [-c, --scale-factor]")
+        }
+        val scaleFactor = Integer.parseInt(cmd.getOptionValue("c"))
+        
         val file = new File(cmd.getOptionValue("f"))
         val queryIdx = "*"
         //val users = cmd.getOptionValue("u", concurrency)
