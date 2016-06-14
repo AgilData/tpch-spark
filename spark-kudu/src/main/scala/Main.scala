@@ -79,25 +79,25 @@ object Main {
         // Power (single thread)
         new TpchQuery(execCtx, result).executeQueries(file, queryIdx, ResultHelper.Mode.Power)
 
-//        // Throughput (concurrency)
-//        val pool: ExecutorService = Executors.newFixedThreadPool(concurrency)
-//        val tasks = {
-//          for (i <- 1 to concurrency) yield
-//
-//             new Callable[String]() {
-//              def call(): String = {
-//                ResultHelper.timeAndRecord(result, i, ResultHelper.Mode.ThroughputE2E) {
-//                  new TpchQuery(execCtx, result).executeQueries(file, queryIdx, ResultHelper.Mode.ThroughputQ)
-//                }
-//                "OK"
-//              }
-//            }
-//
-//        }
-//
-//        import scala.collection.JavaConversions._
-//        pool.invokeAll(tasks.toList)
-//        pool.shutdown()
+        // Throughput (concurrency)
+        val pool: ExecutorService = Executors.newFixedThreadPool(concurrency)
+        val tasks = {
+          for (i <- 1 to concurrency) yield
+
+             new Callable[String]() {
+              def call(): String = {
+                ResultHelper.timeAndRecord(result, i, ResultHelper.Mode.ThroughputE2E) {
+                  new TpchQuery(execCtx, result).executeQueries(file, queryIdx, ResultHelper.Mode.ThroughputQ)
+                }
+                "OK"
+              }
+            }
+
+        }
+
+        import scala.collection.JavaConversions._
+        pool.invokeAll(tasks.toList)
+        pool.shutdown()
 
         result.record("./tpch_result")
       }
