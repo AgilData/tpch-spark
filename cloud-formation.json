@@ -166,6 +166,7 @@
                   "sbt \"run --kuduMaster $ZOOKEEPER_ADDRESS:7051 ",
                   "   --sparkMaster local[*] ",
                   "   --inputDir /mnt/data/tpch-spark/dbgen/ ",
+                  "   --partitionCount ", { "Ref" : "PartitionCount" },
                   "   --executorMemory ", { "Ref" : "ExecMem" },
                   "   --mode populate\"\n",
 
