@@ -42,7 +42,9 @@ class Result(concurrency: Int) {
     }
 
     // record power
-    val powerCsvOut = new PrintWriter(new File(dir, "power.csv"))
+    val powerFile = new File(dir, "power.csv")
+    val powerCsvOut = new PrintWriter(powerFile)
+    println(s"Writing power results to ${powerFile.getAbsolutePath}")
     powerCsvOut.write("Query,Time(ms)\n")
     power.toSeq.sortBy(_._1) foreach( t => {
       val row = Seq(t._1) ++ Seq(t._2)
@@ -52,7 +54,9 @@ class Result(concurrency: Int) {
     powerCsvOut.close()
 
     // record throughput, per query times
-    val tpCsvOut = new PrintWriter(new File(dir, "throughputPerQ.csv"))
+    val tpCsvFile = new File(dir, "throughputPerQ.csv")
+    val tpCsvOut = new PrintWriter(tpCsvFile)
+    println(s"Writing throughput per query results to ${tpCsvFile.getAbsolutePath}")
     val b = new StringBuilder("Query")
     1 to concurrency foreach(n => b.append(",").append(s"time${n}(ms)"))
     tpCsvOut.write(b.toString())
@@ -66,7 +70,10 @@ class Result(concurrency: Int) {
     tpCsvOut.close()
 
     // record throughput, end to end
-    val tpECsvOut = new PrintWriter(new File(dir, "throughputE2E.csv"))
+    val tpECsvFile = new File(dir, "throughputE2E.csv")
+    val tpECsvOut = new PrintWriter(tpECsvFile)
+    println(s"Writing throughput end to end results to ${tpECsvFile.getAbsolutePath}")
+
     tpECsvOut.write("Thread,Time(ms)\n")
     throughputE2E.toSeq.sortBy(_._1) foreach(t => {
       val row = Seq(t._1) ++ Seq(t._2)
