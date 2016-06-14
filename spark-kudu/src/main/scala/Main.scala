@@ -15,7 +15,7 @@ case class ExecCtx(sparkCtx: SparkContext, sqlCtx: SQLContext, kuduCtx: Broadcas
   * Created by andy on 5/6/16.
   */
 object Main {
-  val concurrency = 5 // TODO concurrency configurable
+  val concurrency = 5
 
   object BenchMode extends Enumeration {
     val All, Power, Throughput = Value
@@ -32,7 +32,7 @@ object Main {
     options.addOption("q", "queryFile", true, "queryFile")
     options.addOption("f", "file", true, "file")
     options.addOption("e", "executorMemory", true, "spark.executor.memory")
-    options.addOption("u", "users", true, "Number of concurrent users for benchmark")
+    options.addOption("u", "users", true, s"Number of concurrent users for benchmark, default is ${concurrency}")
     options.addOption("p", "partitionCount", true, "spark.sql.shuffle.partitions")
     options.addOption("w", "power", false, "run only the power benchmark")
     options.addOption("t", "throughput", false, "run only the throughput benchmark")

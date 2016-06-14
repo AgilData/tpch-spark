@@ -90,9 +90,9 @@ class Result(concurrency: Int) {
   }
 
   /*
-  return tuple of Power, Throughput, QphH
+  return tuple of (Power, Throughput, QphH)
    */
-  def compute(): (BigDecimal, BigDecimal, BigDecimal) = {
+  def compute(): (Double, Double, Double) = {
     throw new UnsupportedOperationException
   }
 
