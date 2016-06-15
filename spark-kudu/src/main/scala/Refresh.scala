@@ -73,20 +73,24 @@ object Refresh {
     val session = kuduContext.getSession()
     session.setFlushMode(SessionConfiguration.FlushMode.MANUAL_FLUSH)
 
+    var deletes = 0
     while (lines.hasNext) {
       val line = lines.next().split("|")
       val orderKey = Integer.parseInt(line(0))
       kuduContext.delete(Seq(orderKey), Seq("o_orderkey"),"order", session)
-
+      deletes += 1
       val rows = sqlContext.table("lineitem")
         .select("l_linenumber")
         .filter($"l_orderkey" === orderKey).collect()
 
       rows.foreach(f => {
         kuduContext.delete(Seq(orderKey, f.getInt(0)), Seq("l_orderkey", "l_linenumber"),"lineitem", session)
+        deletes +=1
       })
       session.flush()
     }
+
+    println(s"HERERE completes $deletes deletes!")
 
     session.close()
 
