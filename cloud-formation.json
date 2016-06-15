@@ -615,7 +615,7 @@
                   "./sbin/start-master.sh\n",
                   "cd /mnt/data/kudu/build/release\n",
                   "mkdir -p /root/wals\n",
-                	"nohup bin/kudu-master -fs_wal_dir=/mnt/wals -logtostderr -use_hybrid_clock=false --webserver_doc_root=/mnt/data/kudu &\n",
+                	"nohup bin/kudu-master -fs_wal_dir=/mnt/wals -fs_data_dirs=/var/lib/kudu/master -logtostderr -use_hybrid_clock=false --webserver_doc_root=/mnt/data/kudu &\n",
 
                   "echo Started Master!\n",
                   "echo Signal the status from cfn-init\n",
