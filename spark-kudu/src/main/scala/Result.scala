@@ -8,13 +8,32 @@ import scala.math.BigDecimal.RoundingMode
 class Result(concurrency: Int, sf: Int) {
 
   val power : scala.collection.mutable.Map[Int, Long] = scala.collection.mutable.Map()
+  val powerRF : scala.collection.mutable.Map[String, Long] = scala.collection.mutable.Map()
   val throughputPerQ : scala.collection.mutable.Map[Int, ListBuffer[(Int, Long)]] = scala.collection.mutable.Map()
   val throughputE2E: scala.collection.mutable.Map[Int, Long] = scala.collection.mutable.Map()
+  val throughputRF : scala.collection.mutable.Map[String, ListBuffer[(Int, Long)]] = scala.collection.mutable.Map()
 
   def recordPowerRes(index: Int, time: Long): Unit = {
     //val timeInSec = time.toDouble / 1000
     //power += (index -> Seq(BigDecimal(timeInSec).setScale(2, RoundingMode.HALF_EVEN), BigDecimal(scala.math.log(timeInSec)).setScale(2, RoundingMode.HALF_EVEN)))
     power += (index -> time)
+  }
+
+  def recordRF(funcNo: Int, time: Long, mode: ResultHelper.Mode.Value, thread: Int): Unit = {
+    val key = funcNo match {
+      case 1 => "RF1"
+      case 2 => "RF2"
+    }
+    mode match {
+      case ResultHelper.Mode.PowerRF => powerRF += (key -> time)
+        // TODO this may change...
+      case ResultHelper.Mode.ThroughputRF =>
+        if (!throughputRF.contains(key)) {
+          throughputRF += (key -> ListBuffer((thread,time)))
+        } else {
+          throughputRF.get(key).get += ((thread, time))
+        }
+    }
   }
 
   // Per query concurrent result
@@ -51,7 +70,13 @@ class Result(concurrency: Int, sf: Int) {
       powerCsvOut.write(row.mkString(","))
       powerCsvOut.write("\n")
     })
+    powerRF.toSeq.sortBy(_._1) foreach ( t => {
+      val row = Seq(t._1) ++ Seq(t._2)
+      powerCsvOut.write(row.mkString(","))
+      powerCsvOut.write("\n")
+    })
     powerCsvOut.close()
+
 
     // record throughput, per query times
     val tpCsvFile = new File(dir, "throughputPerQ.csv")
@@ -156,7 +181,7 @@ class Result(concurrency: Int, sf: Int) {
 object ResultHelper {
 
   object Mode extends Enumeration {
-    val Power, ThroughputQ, ThroughputE2E = Value
+    val Power, PowerRF, ThroughputQ, ThroughputE2E, ThroughputRF = Value
   }
 
   def timeAndRecord[R](result: Result, index: Int, mode: Mode.Value, threadNo: Int = 0)(block: => R): R = {
@@ -167,6 +192,7 @@ object ResultHelper {
       case Mode.Power => result.recordPowerRes(index, t1 - t0)
       case Mode.ThroughputQ => result.recordThroughputQRes(index, t1 - t0, threadNo)
       case Mode.ThroughputE2E => result.recordThroughputE2E(index, t1 - t0)
+      case Mode.PowerRF | Mode.ThroughputRF => result.recordRF(index, t1-t0, mode, threadNo)
       case _ => throw new IllegalStateException()
     }
     res

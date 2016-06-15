@@ -48,7 +48,7 @@ class TpchQuery(execCtx: ExecCtx, result: Result, dbGenInputDir: String) {
     lines.indices.foreach(idx => {
 
       if (mode == ResultHelper.Mode.Power) {
-        Refresh.executeRF1(dbGenInputDir, threadNo + 1, execCtx)
+        ResultHelper.timeAndRecord(result, 1, ResultHelper.Mode.RF) { Refresh.executeRF1(dbGenInputDir, threadNo + 1, execCtx)}
       }
 
       val line = lines(idx)
@@ -71,7 +71,7 @@ class TpchQuery(execCtx: ExecCtx, result: Result, dbGenInputDir: String) {
       }
 
       if (mode == ResultHelper.Mode.Power) {
-        Refresh.executeRF2(dbGenInputDir, threadNo + 1, execCtx)
+        ResultHelper.timeAndRecord(result, 2, ResultHelper.Mode.RF) { Refresh.executeRF2(dbGenInputDir, threadNo + 1, execCtx) }
       }
     })
   }
