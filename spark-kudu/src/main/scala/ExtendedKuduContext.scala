@@ -100,11 +100,13 @@ case class ExtendedKuduContext(kuduMaster: String) extends KuduContext(kuduMaste
     session.apply(insert)
   }
 
-  def delete(key: Int, tableName: String, session: KuduSession): Unit = {
+  def delete(keys: Seq[Int], columns: Seq[String], tableName: String, session: KuduSession): Unit = {
     val table: KuduTable = syncClient.openTable(tableName)
     val delete = table.newDelete()
     val kuduRow: PartialRow = delete.getRow
-    kuduRow.addInt(0, key)
+    for (i <- keys.indices) {
+      kuduRow.addInt(columns(i), keys(i))
+    }
     session.apply(delete)
   }
 

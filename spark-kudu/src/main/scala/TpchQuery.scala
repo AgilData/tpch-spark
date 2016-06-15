@@ -45,11 +45,12 @@ class TpchQuery(execCtx: ExecCtx, result: Result, dbGenInputDir: String) {
                      threadNo: Int = 0): Unit = {
     val lines = Source.fromFile(file).getLines().toList
 
+    if (mode == ResultHelper.Mode.Power) {
+      ResultHelper.timeAndRecord(result, 1, ResultHelper.Mode.PowerRF) { Refresh.executeRF1(dbGenInputDir, threadNo + 1, execCtx)}
+    }
+
     lines.indices.foreach(idx => {
 
-      if (mode == ResultHelper.Mode.Power) {
-        ResultHelper.timeAndRecord(result, 1, ResultHelper.Mode.PowerRF) { Refresh.executeRF1(dbGenInputDir, threadNo + 1, execCtx)}
-      }
 
       val line = lines(idx)
       if (!line.trim.startsWith("--")) {
@@ -69,11 +70,11 @@ class TpchQuery(execCtx: ExecCtx, result: Result, dbGenInputDir: String) {
 
         println(s"Query $idx took ${t2 - t1} ms to return $cnt rows")
       }
-
-      if (mode == ResultHelper.Mode.Power) {
-        ResultHelper.timeAndRecord(result, 2, ResultHelper.Mode.PowerRF) { Refresh.executeRF2(dbGenInputDir, threadNo + 1, execCtx) }
-      }
     })
+
+    if (mode == ResultHelper.Mode.Power) {
+      ResultHelper.timeAndRecord(result, 2, ResultHelper.Mode.PowerRF) { Refresh.executeRF2(dbGenInputDir, threadNo + 1, execCtx) }
+    }
   }
 
   def getQuery(l: String): QueryParams = {

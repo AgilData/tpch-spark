@@ -4,6 +4,9 @@ import java.io.{BufferedReader, File, FileReader}
 import java.util.Random
 
 import org.kududb.client.SessionConfiguration
+import org.apache.spark.sql.{DataFrame, SQLContext}
+import org.apache.spark.sql.functions._
+import org.kududb.spark.kudu._
 
 import scala.io.Source
 
@@ -53,13 +56,15 @@ object Refresh {
   }
 
   def executeRF2(dir: String, set: Int, execCtx: ExecCtx): Unit = {
+    println("Executing RF2...")
 
     val sc = execCtx.sparkCtx
     val sqlContext = execCtx.sqlCtx
     val kuduContext = execCtx.kuduCtx.value
 
-    // TODO would hdfs be more performant?
-    val deletesU = dir + s"/delete.tbl.u${set}"
+    import sqlContext.implicits._
+
+    val deletesU = dir + s"/delete.${set}"
     println(s"Loading delete keys from $deletesU")
     val lines = Source.fromFile(new File(deletesU)).getLines()
 //    val order = sqlContext.createDataFrame(Source.fromFile(new File(ordersU)).getLines().toList.map(_.split('|')).map(p => Order(p(0).trim.toInt, p(1).trim.toInt, p(2).trim, p(3).trim.toDouble, p(4).trim, p(5).trim, p(6).trim, p(7).trim.toInt, p(8).trim)))
@@ -70,8 +75,16 @@ object Refresh {
 
     while (lines.hasNext) {
       val line = lines.next().split("|")
-      kuduContext.delete(Integer.parseInt(line(0)), "order", session)
-      kuduContext.delete(Integer.parseInt(line(0)), "lineitem", session)
+      val orderKey = Integer.parseInt(line(0))
+      kuduContext.delete(Seq(orderKey), Seq("o_orderkey"),"order", session)
+
+      val rows = sqlContext.table("lineitem")
+        .select("l_linenumber")
+        .filter($"l_orderkey" === orderKey).collect()
+
+      rows.foreach(f => {
+        kuduContext.delete(Seq(orderKey, f.getInt(0)), Seq("l_orderkey", "l_linenumber"),"lineitem", session)
+      })
       session.flush()
     }
 
