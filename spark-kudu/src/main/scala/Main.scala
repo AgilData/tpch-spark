@@ -92,11 +92,11 @@ object Main {
         if (!cmd.hasOption("c")) {
           throw new RuntimeException("Missing required arg: [-c, --scale-factor]")
         }
+
         val scaleFactor = Integer.parseInt(cmd.getOptionValue("c"))
-        
+
         val file = new File(cmd.getOptionValue("f"))
         val queryIdx = "*"
-        //val users = cmd.getOptionValue("u", concurrency)
 
         val users = benchMode match {
           case BenchMode.Throughput | BenchMode.All => Integer.parseInt(cmd.getOptionValue("u", s"$concurrency"))
