@@ -92,9 +92,12 @@ object Main {
         if (!cmd.hasOption("c")) {
           throw new RuntimeException("Missing required arg: [-c, --scale-factor]")
         }
+        if (!cmd.hasOption("i")) {
+          throw new RuntimeException("Missing required arg: [-i, --inputDir]")
+        }
 
         val scaleFactor = Integer.parseInt(cmd.getOptionValue("c"))
-
+        val inputDir = cmd.getOptionValue("i")
         val file = new File(cmd.getOptionValue("f"))
         val queryIdx = "*"
 
@@ -106,11 +109,11 @@ object Main {
         val result = new Result(users, scaleFactor)
 
         benchMode match {
-          case BenchMode.Power => executePower(result, execCtx, queryIdx, file)
-          case BenchMode.Throughput => executeThroughput(result, execCtx, queryIdx, file, users)
+          case BenchMode.Power => executePower(result, execCtx, queryIdx, file, inputDir)
+          case BenchMode.Throughput => executeThroughput(result, execCtx, queryIdx, file, users, inputDir)
           case BenchMode.All =>
-            executePower(result, execCtx, queryIdx, file)
-            executeThroughput(result, execCtx, queryIdx, file, users)
+            executePower(result, execCtx, queryIdx, file, inputDir)
+            executeThroughput(result, execCtx, queryIdx, file, users, inputDir)
           case _ => throw new IllegalStateException()
         }
 
@@ -120,12 +123,12 @@ object Main {
     }
   }
 
-  def executePower(result: Result, execCtx: ExecCtx, queryIdx: String, file: File): Unit = {
+  def executePower(result: Result, execCtx: ExecCtx, queryIdx: String, file: File, inputDir: String): Unit = {
     println("Executing power benchmark...")
-    new TpchQuery(execCtx, result).executeQueries(file, queryIdx, ResultHelper.Mode.Power)
+    new TpchQuery(execCtx, result, inputDir).executeQueries(file, queryIdx, ResultHelper.Mode.Power)
   }
 
-  def executeThroughput(result: Result, execCtx: ExecCtx, queryIdx: String, file: File, users: Int): Unit = {
+  def executeThroughput(result: Result, execCtx: ExecCtx, queryIdx: String, file: File, users: Int, inputDir: String): Unit = {
     println(s"Executing throughput benchmark... Concurrency: $users")
     val pool: ExecutorService = Executors.newFixedThreadPool(users)
     val tasks = {
@@ -134,7 +137,7 @@ object Main {
         new Callable[String]() {
           def call(): String = {
             ResultHelper.timeAndRecord(result, i, ResultHelper.Mode.ThroughputE2E) {
-              new TpchQuery(execCtx, result).executeQueries(file, queryIdx, ResultHelper.Mode.ThroughputQ, i)
+              new TpchQuery(execCtx, result, inputDir).executeQueries(file, queryIdx, ResultHelper.Mode.ThroughputQ, i)
             }
             "OK"
           }

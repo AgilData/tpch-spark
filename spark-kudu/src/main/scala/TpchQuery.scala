@@ -11,7 +11,7 @@ import org.kududb.spark.kudu._
 import scala.io.Source
 
 /** Executes TPC-H analytics queries */
-class TpchQuery(execCtx: ExecCtx, result: Result) {
+class TpchQuery(execCtx: ExecCtx, result: Result, dbGenInputDir: String) {
   val master = execCtx.kuduCtx.value.kuduMaster
   val tableNames = Array(
     "partsupp",
@@ -39,10 +39,18 @@ class TpchQuery(execCtx: ExecCtx, result: Result) {
   val order: DataFrame = sqlCtx.table("`order`")
   val lineitem: DataFrame = sqlCtx.table("lineitem")
 
-  def executeQueries(file: File, queryIdx: String, mode: ResultHelper.Mode.Value, threadNo: Int = 0): Unit = {
+  def executeQueries(file: File,
+                     queryIdx: String,
+                     mode: ResultHelper.Mode.Value,
+                     threadNo: Int = 0): Unit = {
     val lines = Source.fromFile(file).getLines().toList
 
     lines.indices.foreach(idx => {
+
+      if (mode == ResultHelper.Mode.Power) {
+        Refresh.executeRF1(dbGenInputDir, threadNo + 1, execCtx)
+      }
+
       val line = lines(idx)
       if (!line.trim.startsWith("--")) {
         val t1 = System.currentTimeMillis()
@@ -60,6 +68,10 @@ class TpchQuery(execCtx: ExecCtx, result: Result) {
         val t2 = System.currentTimeMillis()
 
         println(s"Query $idx took ${t2 - t1} ms to return $cnt rows")
+      }
+
+      if (mode == ResultHelper.Mode.Power) {
+        Refresh.executeRF2(dbGenInputDir, threadNo + 1, execCtx)
       }
     })
   }

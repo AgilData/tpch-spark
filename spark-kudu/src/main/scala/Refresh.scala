@@ -43,7 +43,7 @@ object Refresh {
 
   }
 
-  def executeRF2(dir: String, set: Int): Unit = {
+  def executeRF2(dir: String, set: Int, execCtx: ExecCtx): Unit = {
 
   }
 
