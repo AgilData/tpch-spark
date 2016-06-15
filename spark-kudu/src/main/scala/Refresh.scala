@@ -21,7 +21,7 @@ object Refresh {
     println(s"Loading customer updates from $ordersU")
     val order = sqlContext.createDataFrame(sc.textFile(ordersU).map(_.split('|')).map(p => Order(p(0).trim.toInt, p(1).trim.toInt, p(2).trim, p(3).trim.toDouble, p(4).trim, p(5).trim, p(6).trim, p(7).trim.toInt, p(8).trim)))
 
-    val lineItemU = dir + s"/lineitems.tbl.u${set}"
+    val lineItemU = dir + s"/lineitem.tbl.u${set}"
     println(s"Loading lineitem updates from $lineItemU")
     val lineitem = sqlContext.createDataFrame(sc.textFile(lineItemU).map(_.split('|')).map(p => Lineitem(p(0).trim.toInt, p(1).trim.toInt, p(2).trim.toInt, p(3).trim.toInt, p(4).trim.toDouble, p(5).trim.toDouble, p(6).trim.toDouble, p(7).trim.toDouble, p(8).trim, p(9).trim, p(10).trim, p(11).trim, p(12).trim, p(13).trim, p(14).trim, p(15).trim)))
 
