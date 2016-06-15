@@ -28,6 +28,14 @@
       "ConstraintDescription" : "Must be > 50G"
     },
 
+    "WalVolumeSize": {
+      "Default": "50",
+      "Description" : "The size of the instance WAL volume in gigs",
+      "Type": "Number",
+      "MinValue": "50",
+      "ConstraintDescription" : "Must be > 50G"
+    },
+
     "WorkerMem": {
       "Default": "1G",
       "Description" : "Amount of memory to give Spark workers",
@@ -308,7 +316,7 @@
         "DesiredCapacity" : { "Ref" : "BrokerCapacity" },
         "Tags" : [
           { "Key" : "Name", "Value" : { "Fn::Join" : [ " ", [ "TServer", { "Ref" : "AWS::StackName" } ] ] }, "PropagateAtLaunch" : "true"},
-          {"Key" : "Billing Breakout", "Value" : "kudu_poc", "PropagateAtLaunch" : "true"}
+          { "Key" : "Billing Breakout", "Value" : "kudu_poc", "PropagateAtLaunch" : "true"}
         ]
       },
       "CreationPolicy" : {
@@ -418,8 +426,7 @@
                   "cd /mnt/data/spark\n",
                   "./sbin/start-slave.sh --memory ", { "Ref" : "WorkerMem" }," spark://${ZOOKEEPER_ADDRESS}:7077 &\n",
                   "cd /mnt/data/kudu/build/release\n",
-                  "mkdir -p /root/wals\n",
-                  "nohup bin/kudu-tserver -fs_wal_dir=/root/wals -tserver_master_addrs ${ZOOKEEPER_ADDRESS} -logtostderr -use_hybrid_clock=false &\n",
+                  "nohup bin/kudu-tserver -fs_wal_dir=/mnt/wals -fs_data_dirs=/var/lib/kudu/master -tserver_master_addrs ${ZOOKEEPER_ADDRESS} -logtostderr -use_hybrid_clock=false &\n",
 
                   "echo Started Worker!\n",
                   "echo Signal the status from cfn-init\n",
@@ -454,6 +461,13 @@
         "BlockDeviceMappings": [{
           "DeviceName": "/dev/sdb",
           "Ebs" : {"VolumeSize": { "Ref" : "DataVolumeSize" }}
+        },
+        {
+          "DeviceName": "/dev/xvdc",
+          "Ebs" : {
+            "VolumeSize": { "Ref" : "WalVolumeSize" },
+            "VolumeType": "gp2"
+          }
         }],
         "UserData": {
           "Fn::Base64": { "Fn::Join":["", [
@@ -463,6 +477,11 @@
             "trap 'exec 2>&4 1>&3' 0 1 2 3\n",
             "exec 1>boot.out 2>&1\n",
 
+            "mkdir -p /mnt/wals\n",
+            "mkfs -t xfs /dev/xvdc\n",
+            "mount /dev/xvdc /mnt/wals/\n",
+
+            "xfs_growfs /mnt/wals\n",
             "xfs_growfs /mnt/data\n",
 
             "apt-get update\n",
@@ -476,7 +495,6 @@
             "wget https://s3.amazonaws.com/aws-cloudwatch/downloads/latest/awslogs-agent-setup.py\n",
 
             "python awslogs-agent-setup.py -n -r ", { "Ref" : "AWS::Region" }, " -c /tmp/cwlogs/output.conf || error_exit 'Failed to run CloudWatch Logs agent setup'\n",
-
 
             "/usr/local/bin/cfn-init -v --stack ", { "Ref":"AWS::StackName" }, " --resource LaunchConfig", " --configsets InstallAndRun ", " --region ", { "Ref": "AWS::Region" }, "\n"
           ]]}
@@ -597,7 +615,7 @@
                   "./sbin/start-master.sh\n",
                   "cd /mnt/data/kudu/build/release\n",
                   "mkdir -p /root/wals\n",
-                	"nohup bin/kudu-master -fs_wal_dir=/root/wals -logtostderr -use_hybrid_clock=false --webserver_doc_root=/mnt/data/kudu &\n",
+                	"nohup bin/kudu-master -fs_wal_dir=/mnt/wals -logtostderr -use_hybrid_clock=false --webserver_doc_root=/mnt/data/kudu &\n",
 
                   "echo Started Master!\n",
                   "echo Signal the status from cfn-init\n",
@@ -648,6 +666,13 @@
         "BlockDeviceMappings": [{
           "DeviceName": "/dev/sdb",
           "Ebs" : {"VolumeSize": { "Ref" : "DataVolumeSize" }}
+        },
+        {
+          "DeviceName": "/dev/xvdc",
+          "Ebs" : {
+            "VolumeSize": { "Ref" : "WalVolumeSize" },
+            "VolumeType": "gp2"
+          }
         }],
         "UserData": {
           "Fn::Base64": { "Fn::Join":["", [
@@ -657,6 +682,11 @@
             "trap 'exec 2>&4 1>&3' 0 1 2 3\n",
             "exec 1>boot.out 2>&1\n",
 
+            "mkdir -p /mnt/wals\n",
+            "mkfs -t xfs /dev/xvdc\n",
+            "mount /dev/xvdc /mnt/wals/\n",
+
+            "xfs_growfs /mnt/wals\n",
             "xfs_growfs /mnt/data\n",
 
             "apt-get update\n",
