@@ -37,14 +37,16 @@ object Refresh {
 
     val random = new Random()
     val lineItemCol = lineitem.collect().iterator
-//    var index = 0
+    var inserts = 0
 
     // This dataframe will have the appropriate number of rows for our SF
     order.collect().foreach(row => {
       kuduContext.insert(row, "order", session)
+      inserts += 1
 
       for (i <- 1 to (random.nextInt(7 - 1) + 1)) {
         kuduContext.insert(lineItemCol.next(), "lineitem", session)
+        inserts += 2
       }
 
       session.flush()
@@ -52,6 +54,8 @@ object Refresh {
     })
 
     session.close()
+    
+    println(s"RF1 completes $inserts inserts")
 
   }
 
@@ -90,7 +94,7 @@ object Refresh {
       session.flush()
     }
 
-    println(s"HERERE completes $deletes deletes!")
+    println(s"RF1 completes $deletes deletes!")
 
     session.close()
 
