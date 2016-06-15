@@ -74,7 +74,7 @@ object Refresh {
       kuduContext.delete(Integer.parseInt(line(0)), "lineitem", session)
       session.flush()
     }
-    
+
     session.close()
 
   }
