@@ -190,15 +190,15 @@
                   "sudo ln -s /mnt/data/ivy2 /root/.ivy2\n",
                   "sbt package\n",
 
-                  "cd /mnt/data/tpch-spark/dbgen/\n",
-                  "./dbgen -qf -s ", { "Ref" : "ScaleFactor" }, "\n",
-
                   "echo Started Benchmark!\n",
                   "echo Signal the status from cfn-init\n",
                   "/usr/local/bin/cfn-signal -e $? ",
                   "         --stack ", { "Ref" : "AWS::StackName" },
                   "         --resource TestRunner ",
                   "         --region ", { "Ref" : "AWS::Region" }, "\n",
+
+                  "cd /mnt/data/tpch-spark/dbgen/\n",
+                  "./dbgen -qf -s ", { "Ref" : "ScaleFactor" }, "\n",
 
                   "echo ZOOKEEPER_ADDRESS=$ZOOKEEPER_ADDRESS\n",
                   "cd /mnt/data/tpch-spark/spark-kudu\n",
