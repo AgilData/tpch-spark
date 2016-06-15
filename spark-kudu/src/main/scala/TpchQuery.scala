@@ -1,11 +1,9 @@
 package tpch
 
 import java.io.{BufferedReader, File, FileReader}
-import java.sql.Date
 import java.text.SimpleDateFormat
 import java.util.Calendar
 
-import org.apache.commons.math3.analysis.function.Power
 import org.apache.spark.sql.{DataFrame, SQLContext}
 import org.apache.spark.sql.functions._
 import org.kududb.spark.kudu._
@@ -41,9 +39,8 @@ class TpchQuery(execCtx: ExecCtx, result: Result) {
   val order: DataFrame = sqlCtx.table("`order`")
   val lineitem: DataFrame = sqlCtx.table("lineitem")
 
-  def executeQueries(file: File, queryIdx: String, mode: ResultHelper.Mode.Value): Unit = {
+  def executeQueries(file: File, queryIdx: String, mode: ResultHelper.Mode.Value, threadNo: Int = 0): Unit = {
     val lines = Source.fromFile(file).getLines().toList
-
 
     lines.indices.foreach(idx => {
       val line = lines(idx)
@@ -54,7 +51,7 @@ class TpchQuery(execCtx: ExecCtx, result: Result) {
         val q = getQuery(line)
         var cnt: Long = 0
 
-        ResultHelper.timeAndRecord(result, q.query, mode) {
+        ResultHelper.timeAndRecord(result, q.query, mode, threadNo) {
           val df = execute(q, mode)
           df.show()
           cnt = df.count()

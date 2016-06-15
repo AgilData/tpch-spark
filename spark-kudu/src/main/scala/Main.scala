@@ -15,7 +15,11 @@ case class ExecCtx(sparkCtx: SparkContext, sqlCtx: SQLContext, kuduCtx: Broadcas
   * Created by andy on 5/6/16.
   */
 object Main {
-  val concurrency = 5 // TODO concurrency configurable
+  val concurrency = 5
+
+  object BenchMode extends Enumeration {
+    val All, Power, Throughput = Value
+  }
 
   def main(args: Array[String]): Unit = {
     Logger.getRootLogger.setLevel(Level.ERROR)
@@ -28,11 +32,24 @@ object Main {
     options.addOption("q", "queryFile", true, "queryFile")
     options.addOption("f", "file", true, "file")
     options.addOption("e", "executorMemory", true, "spark.executor.memory")
-    options.addOption("u", "users", true, "Number of concurrent users for benchmark")
+    options.addOption("u", "users", true, s"Number of concurrent users for benchmark, default is ${concurrency}")
     options.addOption("p", "partitionCount", true, "spark.sql.shuffle.partitions")
+    options.addOption("w", "power", false, "run only the power benchmark")
+    options.addOption("t", "throughput", false, "run only the throughput benchmark")
+    options.addOption("c", "scale-factor", true, "scale factor of data population")
 
     val parser = new BasicParser
     val cmd = parser.parse(options, args)
+
+    val benchMode = {
+      if (cmd.hasOption("w") && !cmd.hasOption("t")) {
+        BenchMode.Power
+      } else if (cmd.hasOption("t") && !cmd.hasOption("w")) {
+        BenchMode.Throughput
+      } else {
+        BenchMode.All
+      }
+    }
 
     val KUDU_MASTER = cmd.getOptionValue("k", "127.0.0.1:7050")
     val SPARK_MASTER = cmd.getOptionValue("s", "local[*]")
@@ -71,33 +88,31 @@ object Main {
       case "populate" => Populate.executeImport(execCtx, INPUT_DIR)
       case "sql" => RunQueries.execute(execCtx, cmd.getOptionValue("q"))
       case "csv" => {
+
+        if (!cmd.hasOption("c")) {
+          throw new RuntimeException("Missing required arg: [-c, --scale-factor]")
+        }
+
+        val scaleFactor = Integer.parseInt(cmd.getOptionValue("c"))
+
         val file = new File(cmd.getOptionValue("f"))
         val queryIdx = "*"
-        //val users = cmd.getOptionValue("u", concurrency)
-        val result = new Result(concurrency)
 
-        // Power (single thread)
-        new TpchQuery(execCtx, result).executeQueries(file, queryIdx, ResultHelper.Mode.Power)
+        val users = benchMode match {
+          case BenchMode.Throughput | BenchMode.All => Integer.parseInt(cmd.getOptionValue("u", s"$concurrency"))
+          case _ => concurrency
+        }
 
-//        // Throughput (concurrency)
-//        val pool: ExecutorService = Executors.newFixedThreadPool(concurrency)
-//        val tasks = {
-//          for (i <- 1 to concurrency) yield
-//
-//             new Callable[String]() {
-//              def call(): String = {
-//                ResultHelper.timeAndRecord(result, i, ResultHelper.Mode.ThroughputE2E) {
-//                  new TpchQuery(execCtx, result).executeQueries(file, queryIdx, ResultHelper.Mode.ThroughputQ)
-//                }
-//                "OK"
-//              }
-//            }
-//
-//        }
-//
-//        import scala.collection.JavaConversions._
-//        pool.invokeAll(tasks.toList)
-//        pool.shutdown()
+        val result = new Result(users, scaleFactor)
+
+        benchMode match {
+          case BenchMode.Power => executePower(result, execCtx, queryIdx, file)
+          case BenchMode.Throughput => executeThroughput(result, execCtx, queryIdx, file, users)
+          case BenchMode.All =>
+            executePower(result, execCtx, queryIdx, file)
+            executeThroughput(result, execCtx, queryIdx, file, users)
+          case _ => throw new IllegalStateException()
+        }
 
         result.record("./tpch_result")
       }
@@ -105,4 +120,30 @@ object Main {
     }
   }
 
+  def executePower(result: Result, execCtx: ExecCtx, queryIdx: String, file: File): Unit = {
+    println("Executing power benchmark...")
+    new TpchQuery(execCtx, result).executeQueries(file, queryIdx, ResultHelper.Mode.Power)
+  }
+
+  def executeThroughput(result: Result, execCtx: ExecCtx, queryIdx: String, file: File, users: Int): Unit = {
+    println(s"Executing throughput benchmark... Concurrency: $users")
+    val pool: ExecutorService = Executors.newFixedThreadPool(users)
+    val tasks = {
+      for (i <- 1 to users) yield
+
+        new Callable[String]() {
+          def call(): String = {
+            ResultHelper.timeAndRecord(result, i, ResultHelper.Mode.ThroughputE2E) {
+              new TpchQuery(execCtx, result).executeQueries(file, queryIdx, ResultHelper.Mode.ThroughputQ, i)
+            }
+            "OK"
+          }
+        }
+
+    }
+
+    import scala.collection.JavaConversions._
+    pool.invokeAll(tasks.toList)
+    pool.shutdown()
+  }
 }
