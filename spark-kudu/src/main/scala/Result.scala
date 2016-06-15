@@ -94,7 +94,7 @@ class Result(concurrency: Int, sf: Int) {
     println(s"Writing TPCH Metric Results to ${resultFile.getAbsolutePath}")
 
     resultsFileOut.write("Power@Size,Throughput@Size,QphH\n")
-    resultsFileOut.write(s"${results._1},${results._2},${results._3}")
+    resultsFileOut.write(s"${results._1},${results._2},${results._3}\n")
     resultsFileOut.close()
 
   }
