@@ -71,6 +71,17 @@ case class ExtendedKuduContext(kuduMaster: String) extends KuduContext(kuduMaste
     })
   }
 
+  def getSession(): KuduSession = {
+    syncClient.newSession()
+  }
+  def insert(row: Row, tableName: String, session: KuduSession): Unit = {
+
+  }
+
+  def delete(): Unit = {
+
+  }
+
   /** Map Spark SQL type to Kudu type */
   override def kuduType(dt: DataType) : Type = dt match {
     case DataTypes.BinaryType => Type.BINARY
