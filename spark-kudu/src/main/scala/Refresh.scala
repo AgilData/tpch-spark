@@ -31,7 +31,7 @@ object Refresh {
     customer.foreach(row => {
       kuduContext.insert(row, "customer", session)
 
-      for (i <- random.nextInt(7 - 1) + 1) {
+      for (i <- 1 to (random.nextInt(7 - 1) + 1)) {
         kuduContext.insert(lineItemIT.next(), "lineitem", session)
       }
 
