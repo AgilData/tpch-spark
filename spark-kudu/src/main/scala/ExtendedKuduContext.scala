@@ -75,7 +75,29 @@ case class ExtendedKuduContext(kuduMaster: String) extends KuduContext(kuduMaste
     syncClient.newSession()
   }
   def insert(row: Row, tableName: String, session: KuduSession): Unit = {
-
+    val table: KuduTable = syncClient.openTable(tableName)
+    val insert: Insert = table.newInsert
+    val kuduRow: PartialRow = insert.getRow
+    for (idx <- row.schema.indices) {
+      if (row.isNullAt(idx)) {
+        kuduRow.setNull(idx)
+      } else {
+        val dt: DataType = row.schema.fields(idx).dataType
+        dt match {
+          case DataTypes.StringType => kuduRow.addString(idx, row.getAs[String](idx))
+          case DataTypes.BinaryType => kuduRow.addBinary(idx, row.getAs[Array[Byte]](idx))
+          case DataTypes.BooleanType => kuduRow.addBoolean(idx, row.getAs[Boolean](idx))
+          case DataTypes.ByteType => kuduRow.addInt(idx, row.getAs[Byte](idx))
+          case DataTypes.ShortType => kuduRow.addInt(idx, row.getAs[Short](idx))
+          case DataTypes.IntegerType => kuduRow.addInt(idx, row.getAs[Int](idx))
+          case DataTypes.LongType => kuduRow.addLong(idx, row.getAs[Long](idx))
+          case DataTypes.FloatType => kuduRow.addFloat(idx, row.getAs[Float](idx))
+          case DataTypes.DoubleType => kuduRow.addDouble(idx, row.getAs[Double](idx))
+          case _ => throw new RuntimeException(s"No support for Spark SQL type $dt")
+        }
+      }
+    }
+    session.apply(insert)
   }
 
   def delete(): Unit = {
