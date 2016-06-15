@@ -54,6 +54,29 @@ object Refresh {
 
   def executeRF2(dir: String, set: Int, execCtx: ExecCtx): Unit = {
 
+    val sc = execCtx.sparkCtx
+    val sqlContext = execCtx.sqlCtx
+    val kuduContext = execCtx.kuduCtx.value
+
+    // TODO would hdfs be more performant?
+    val deletesU = dir + s"/delete.tbl.u${set}"
+    println(s"Loading delete keys from $deletesU")
+    val lines = Source.fromFile(new File(deletesU)).getLines()
+//    val order = sqlContext.createDataFrame(Source.fromFile(new File(ordersU)).getLines().toList.map(_.split('|')).map(p => Order(p(0).trim.toInt, p(1).trim.toInt, p(2).trim, p(3).trim.toDouble, p(4).trim, p(5).trim, p(6).trim, p(7).trim.toInt, p(8).trim)))
+
+    // Simulate transactionality
+    val session = kuduContext.getSession()
+    session.setFlushMode(SessionConfiguration.FlushMode.MANUAL_FLUSH)
+
+    while (lines.hasNext) {
+      val line = lines.next().split("|")
+      kuduContext.delete(Integer.parseInt(line(0)), "order", session)
+      kuduContext.delete(Integer.parseInt(line(0)), "lineitem", session)
+      session.flush()
+    }
+    
+    session.close()
+
   }
 
 }

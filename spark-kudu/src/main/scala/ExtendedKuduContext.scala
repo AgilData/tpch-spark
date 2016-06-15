@@ -100,8 +100,12 @@ case class ExtendedKuduContext(kuduMaster: String) extends KuduContext(kuduMaste
     session.apply(insert)
   }
 
-  def delete(): Unit = {
-
+  def delete(key: Int, tableName: String, session: KuduSession): Unit = {
+    val table: KuduTable = syncClient.openTable(tableName)
+    val delete = table.newDelete()
+    val kuduRow: PartialRow = delete.getRow
+    kuduRow.addInt(0, key)
+    session.apply(delete)
   }
 
   /** Map Spark SQL type to Kudu type */
