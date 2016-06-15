@@ -415,7 +415,8 @@
                   "cd /mnt/data/spark\n",
                   "./sbin/start-slave.sh --memory ", { "Ref" : "WorkerMem" }," spark://${ZOOKEEPER_ADDRESS}:7077 &\n",
                   "cd /mnt/data/kudu/build/release\n",
-                  "nohup bin/kudu-tserver -fs_wal_dir=/var/lib/kudu/tserver -tserver_master_addrs ${ZOOKEEPER_ADDRESS} -logtostderr -use_hybrid_clock=false -fs_wal_dir=/var/lib/kudu/tserver &\n",
+                  "mkdir -p /root/wals\n",
+                  "nohup bin/kudu-tserver -fs_wal_dir=/root/wals -tserver_master_addrs ${ZOOKEEPER_ADDRESS} -logtostderr -use_hybrid_clock=false &\n",
 
                   "echo Started Worker!\n",
                   "echo Signal the status from cfn-init\n",
@@ -592,7 +593,8 @@
                   "cd /mnt/data/spark\n",
                   "./sbin/start-master.sh\n",
                   "cd /mnt/data/kudu/build/release\n",
-                	"nohup bin/kudu-master -fs_wal_dir=/var/lib/kudu/master -logtostderr -use_hybrid_clock=false --webserver_doc_root=/mnt/data/kudu &\n",
+                  "mkdir -p /root/wals\n",
+                	"nohup bin/kudu-master -fs_wal_dir=/root/wals -logtostderr -use_hybrid_clock=false --webserver_doc_root=/mnt/data/kudu &\n",
 
                   "echo Started Master!\n",
                   "echo Signal the status from cfn-init\n",
