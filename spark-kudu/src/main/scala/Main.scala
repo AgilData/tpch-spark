@@ -1,6 +1,7 @@
 package tpch
 
 import java.io.File
+import java.util.concurrent.atomic.AtomicInteger
 import java.util.concurrent.{Callable, ExecutorService, Executors, FutureTask}
 
 import org.apache.commons.cli.{BasicParser, Options}
@@ -131,6 +132,7 @@ object Main {
   def executeThroughput(result: Result, execCtx: ExecCtx, queryIdx: String, file: File, users: Int, inputDir: String): Unit = {
     println(s"Executing throughput benchmark... Concurrency: $users")
     val pool: ExecutorService = Executors.newFixedThreadPool(users)
+    val incrementor = new AtomicInteger(0)
     val tasks = {
       for (i <- 1 to (users + 1)) yield
 
@@ -148,7 +150,7 @@ object Main {
           // TODO even scheduling, maybe an fsm...
           new Callable[String]() {
             def call(): String = {
-              new TpchQuery(execCtx, result, inputDir).executeRFStream(users)
+              new TpchQuery(execCtx, result, inputDir).executeRFStream(users, None)
               "OK"
             }
           }

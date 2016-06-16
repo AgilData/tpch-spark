@@ -3,6 +3,7 @@ package tpch
 import java.io.{BufferedReader, File, FileReader}
 import java.text.SimpleDateFormat
 import java.util.Calendar
+import java.util.concurrent.atomic.AtomicInteger
 
 import org.apache.spark.sql.{DataFrame, SQLContext}
 import org.apache.spark.sql.functions._
@@ -39,10 +40,19 @@ class TpchQuery(execCtx: ExecCtx, result: Result, dbGenInputDir: String) {
   val order: DataFrame = sqlCtx.table("`order`")
   val lineitem: DataFrame = sqlCtx.table("lineitem")
 
-  def executeRFStream(users: Int): Unit = {
+  def executeRFStream(users: Int, incrementor: Option[AtomicInteger]): Unit = {
     println(s"Executing Throughput RF thread with $users iterations")
 
     for (i <- 1 to users) {
+
+      if (incrementor.isDefined) {
+        while (incrementor.get.get() < ((i - 1) *22)) {
+          Thread.sleep(1000)
+        }
+      } else {
+        Thread.sleep(1000)
+      }
+
 
       try {
         ResultHelper.timeAndRecord(result, 1, ResultHelper.Mode.ThroughputRF, i) {
@@ -53,7 +63,6 @@ class TpchQuery(execCtx: ExecCtx, result: Result, dbGenInputDir: String) {
           Refresh.executeRF2(dbGenInputDir, i, execCtx)
         }
 
-        Thread.sleep(1000)
       } catch {
         case e: Exception =>
           println("Throughput RF Thread FAILED")
@@ -69,7 +78,8 @@ class TpchQuery(execCtx: ExecCtx, result: Result, dbGenInputDir: String) {
   def executeQueries(file: File,
                      queryIdx: String,
                      mode: ResultHelper.Mode.Value,
-                     threadNo: Int = 0): Unit = {
+                     threadNo: Int = 0,
+                     incrementor: Option[AtomicInteger] = None): Unit = {
     val lines = Source.fromFile(file).getLines().toList
 
     if (mode == ResultHelper.Mode.Power) {
@@ -88,7 +98,7 @@ class TpchQuery(execCtx: ExecCtx, result: Result, dbGenInputDir: String) {
         var cnt: Long = 0
 
         ResultHelper.timeAndRecord(result, q.query, mode, threadNo) {
-          val df = execute(q, mode)
+          val df = execute(q, mode, incrementor)
           df.show()
           cnt = df.count()
         }
@@ -109,10 +119,14 @@ class TpchQuery(execCtx: ExecCtx, result: Result, dbGenInputDir: String) {
     QueryParams(data(0).substring(1).toInt, data(1).toInt, data.slice(2, 99))
   }
 
-  def execute(q: QueryParams, mode: ResultHelper.Mode.Value): DataFrame = {
+  def execute(q: QueryParams, mode: ResultHelper.Mode.Value, incrementor: Option[AtomicInteger]): DataFrame = {
 //    val data: Seq[String] = l.split(",").toSeq
 //    val q = QueryParams(data(0).substring(1).toInt, data(1).toInt, data.slice(2, 99))
     println(s"Executing: Query ${q.query} with limit ${q.limit} and params: ${q.params}")
+
+    if (incrementor.isDefined) {
+      incrementor.get.getAndIncrement()
+    }
 
     val res = q.query match {
       case 1 => q01(q)

@@ -71,7 +71,6 @@ object Refresh {
     val deletesU = dir + s"/delete.${set}"
     println(s"Loading delete keys from $deletesU")
     val lines = Source.fromFile(new File(deletesU)).getLines()
-//    val order = sqlContext.createDataFrame(Source.fromFile(new File(ordersU)).getLines().toList.map(_.split('|')).map(p => Order(p(0).trim.toInt, p(1).trim.toInt, p(2).trim, p(3).trim.toDouble, p(4).trim, p(5).trim, p(6).trim, p(7).trim.toInt, p(8).trim)))
 
     // Simulate transactionality
     val session = kuduContext.getSession()
