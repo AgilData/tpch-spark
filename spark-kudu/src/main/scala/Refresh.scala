@@ -82,15 +82,21 @@ object Refresh {
     var totalODelete = 0L
     var totalLDelete = 0L
     var totalFlush = 0L
+    var totalLookup = 0L
 
     while (lines.hasNext) {
       val line = lines.next().split("|")
       val orderKey = Integer.parseInt(line(0))
       totalODelete += ResultHelper.time() {kuduContext.delete(Seq(orderKey), Seq("o_orderkey"),"order", session)}._1
       oDeletes += 1
-      val rows = sqlContext.table("lineitem")
+      val r = ResultHelper.time() {
+        sqlContext.table("lineitem")
         .select("l_linenumber")
         .filter($"l_orderkey" === orderKey).collect()
+      }
+
+      totalLookup += r._1
+      val rows = r._2
 
       rows.foreach(f => {
         totalLDelete += ResultHelper.time() { kuduContext.delete(Seq(orderKey, f.getInt(0)), Seq("l_orderkey", "l_linenumber"),"lineitem", session)}._1
@@ -102,9 +108,10 @@ object Refresh {
     }
 
     println(s"RF2 completes $oDeletes order and $lDeletes lineitem deletes!")
-    println(s"RF2 completes avg order delete time: ${totalODelete/oDeletes}ms")
-    println(s"RF2 completes avg lineitem delete time: ${totalLDelete/lDeletes}ms")
-    println(s"RF2 completes avg flush time: ${totalFlush/oDeletes}ms")
+    println(s"RF2 completes avg order delete time: ${totalODelete.toDouble/oDeletes}ms")
+    println(s"RF2 completes avg lineitem delete time: ${totalLDelete.toDouble/lDeletes}ms")
+    println(s"RF2 completes avg lookup time: ${totalLookup.toDouble/lDeletes}ms")
+    println(s"RF2 completes avg flush time: ${totalFlush.toDouble/oDeletes}ms")
 
     session.close()
 
