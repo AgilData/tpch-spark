@@ -54,7 +54,7 @@ object Refresh {
     })
 
     session.close()
-    
+
     println(s"RF1 completes $inserts inserts")
 
   }
