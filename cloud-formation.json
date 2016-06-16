@@ -266,7 +266,8 @@
           "DeviceName": "/dev/sdb",
           "Ebs" : {
             "VolumeSize": { "Ref" : "DataVolumeSize" },
-            "VolumeType": "gp2"
+            "VolumeType": "io1",
+            "Iops": 2000
           }
         }],
         "UserData": {
@@ -472,7 +473,8 @@
           "DeviceName": "/dev/xvdc",
           "Ebs" : {
             "VolumeSize": { "Ref" : "WalVolumeSize" },
-            "VolumeType": "gp2"
+            "VolumeType": "io1",
+            "Iops": 2000
           }
         }],
         "UserData": {
@@ -680,7 +682,8 @@
           "DeviceName": "/dev/xvdc",
           "Ebs" : {
             "VolumeSize": { "Ref" : "WalVolumeSize" },
-            "VolumeType": "gp2"
+            "VolumeType": "io1",
+            "Iops": 2000
           }
         }],
         "UserData": {
