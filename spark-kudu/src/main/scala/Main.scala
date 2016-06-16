@@ -150,7 +150,7 @@ object Main {
           // TODO even scheduling, maybe an fsm...
           new Callable[String]() {
             def call(): String = {
-              new TpchQuery(execCtx, result, inputDir).executeRFStream(users, None)
+              new TpchQuery(execCtx, result, inputDir).executeRFStream(users, Some(incrementor))
               "OK"
             }
           }

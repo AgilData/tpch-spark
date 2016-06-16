@@ -82,6 +82,7 @@ class TpchQuery(execCtx: ExecCtx, result: Result, dbGenInputDir: String) {
                      incrementor: Option[AtomicInteger] = None): Unit = {
     val lines = Source.fromFile(file).getLines().toList
 
+    println(s"executeQueries() threadNo=$threadNo")
     if (mode == ResultHelper.Mode.Power) {
       ResultHelper.timeAndRecord(result, 1, ResultHelper.Mode.PowerRF) { Refresh.executeRF1(dbGenInputDir, threadNo + 1, execCtx)}
     }
