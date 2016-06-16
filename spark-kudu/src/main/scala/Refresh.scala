@@ -89,6 +89,8 @@ object Refresh {
       val orderKey = Integer.parseInt(line(0))
       totalODelete += ResultHelper.time() {kuduContext.delete(Seq(orderKey), Seq("o_orderkey"),"order", session)}._1
       oDeletes += 1
+
+      // TODO this is wildly inefficient
       val r = ResultHelper.time() {
         sqlContext.table("lineitem")
         .select("l_linenumber")

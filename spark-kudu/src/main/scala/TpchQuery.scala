@@ -49,11 +49,10 @@ class TpchQuery(execCtx: ExecCtx, result: Result, dbGenInputDir: String) {
       if (incrementor.isDefined) {
         // Schedule 1 RF pair for each 22 queries executed on query threads
         // Even distribution of RF pairs
+        // TODO until the performance issue of RF2 is resolved, this spacing logic is largely useless
         while (incrementor.get.get() < ((i - 1) *22)) {
           Thread.sleep(1000)
-          println(s"Sleeping...counter is ${incrementor.get.get()}")
         }
-        println(s"PROCEED!")
       } else {
         Thread.sleep(1000)
       }
