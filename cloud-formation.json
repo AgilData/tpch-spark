@@ -180,6 +180,7 @@
                   "sudo mkdir -p /root/.m2\n",
                   "sudo ln -s /mnt/data/maven_repository /root/.m2/repository\n",
                   "sudo ln -s /mnt/data/ivy2 /root/.ivy2\n",
+                  "git checkout refresh_functions",
                   "sbt package\n",
 
                   "cd /mnt/data/tpch-spark/dbgen/\n",
@@ -211,7 +212,6 @@
                   "   --executorMemory ", { "Ref" : "ExecMem" },
                   "   -c ", { "Ref" : "ScaleFactor"},
                   "   -u ", { "Ref" : "BenchmarkUsers" },
-                  "   -w ",
                   "   --mode csv\" > log.txt\n"
 
                 ]]}

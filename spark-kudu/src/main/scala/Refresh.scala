@@ -79,9 +79,9 @@ object Refresh {
     var oDeletes = 0
     var lDeletes = 0
 
-    var totalODelete = 0
-    var totalLDelete = 0
-    var totalFlush = 0
+    var totalODelete = 0L
+    var totalLDelete = 0L
+    var totalFlush = 0L
 
     while (lines.hasNext) {
       val line = lines.next().split("|")
