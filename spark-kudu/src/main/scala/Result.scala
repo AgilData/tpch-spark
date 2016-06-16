@@ -206,16 +206,25 @@ object ResultHelper {
   }
 
   def timeAndRecord[R](result: Result, queryNo: Int, mode: Mode.Value, threadNo: Int = 0)(block: => R): R = {
+    val r = time() {block}
+    val t = r._1
+    val res = r._2
+    mode match {
+      case Mode.Power => result.recordPowerRes(queryNo, t)
+      case Mode.ThroughputQ => result.recordThroughputQRes(queryNo, t, threadNo)
+      case Mode.ThroughputE2E => result.recordThroughputE2E(queryNo, t)
+      case Mode.PowerRF | Mode.ThroughputRF => result.recordRF(queryNo, t, mode, threadNo)
+      case _ => throw new IllegalStateException()
+    }
+
+    res
+  }
+
+  def time[R]()(block: => R): (Long,R) = {
     val t0 = System.currentTimeMillis()
     val res = block    // call-by-name
     val t1 = System.currentTimeMillis()
-    mode match {
-      case Mode.Power => result.recordPowerRes(queryNo, t1 - t0)
-      case Mode.ThroughputQ => result.recordThroughputQRes(queryNo, t1 - t0, threadNo)
-      case Mode.ThroughputE2E => result.recordThroughputE2E(queryNo, t1 - t0)
-      case Mode.PowerRF | Mode.ThroughputRF => result.recordRF(queryNo, t1-t0, mode, threadNo)
-      case _ => throw new IllegalStateException()
-    }
-    res
+
+    (t1 - t0, res)
   }
 }
