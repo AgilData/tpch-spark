@@ -110,7 +110,7 @@ class TpchQuery(execCtx: ExecCtx, result: Result, dbGenInputDir: String) {
     }
     val it = orderedSets(ordinal).iterator
     println(s"Using query set in threadNo $threadNo : ${orderedSets(ordinal)}")
-    
+
     while (it.hasNext) {
       val index = it.next()
 

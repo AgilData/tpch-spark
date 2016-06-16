@@ -142,6 +142,7 @@ object Main {
             def call(): String = {
               println(s"Executing RF thread. ThreadNo $i")
               new TpchQuery(execCtx, result, inputDir).executeRFStream(users, Some(incrementor))
+              println(s"RF thread $i COMPLETE.")
               "OK"
             }
           }
@@ -152,6 +153,7 @@ object Main {
               ResultHelper.timeAndRecord(result, i, ResultHelper.Mode.ThroughputE2E) {
                 new TpchQuery(execCtx, result, inputDir).executeQueries(file, queryIdx, ResultHelper.Mode.ThroughputQ, i, Some(incrementor))
               }
+              println(s"Query stream thread $i COMPLETE.")
               "OK"
             }
           }

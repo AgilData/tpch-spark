@@ -95,7 +95,7 @@ object Refresh {
 
     }
 
-    println(s"RF1 completes $deletes deletes!")
+    println(s"RF2 completes $deletes deletes!")
 
     session.close()
 

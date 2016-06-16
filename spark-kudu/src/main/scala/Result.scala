@@ -205,15 +205,15 @@ object ResultHelper {
     val Power, PowerRF, ThroughputQ, ThroughputE2E, ThroughputRF = Value
   }
 
-  def timeAndRecord[R](result: Result, index: Int, mode: Mode.Value, threadNo: Int = 0)(block: => R): R = {
+  def timeAndRecord[R](result: Result, queryNo: Int, mode: Mode.Value, threadNo: Int = 0)(block: => R): R = {
     val t0 = System.currentTimeMillis()
     val res = block    // call-by-name
     val t1 = System.currentTimeMillis()
     mode match {
-      case Mode.Power => result.recordPowerRes(index, t1 - t0)
-      case Mode.ThroughputQ => result.recordThroughputQRes(index, t1 - t0, threadNo)
-      case Mode.ThroughputE2E => result.recordThroughputE2E(index, t1 - t0)
-      case Mode.PowerRF | Mode.ThroughputRF => result.recordRF(index, t1-t0, mode, threadNo)
+      case Mode.Power => result.recordPowerRes(queryNo, t1 - t0)
+      case Mode.ThroughputQ => result.recordThroughputQRes(queryNo, t1 - t0, threadNo)
+      case Mode.ThroughputE2E => result.recordThroughputE2E(queryNo, t1 - t0)
+      case Mode.PowerRF | Mode.ThroughputRF => result.recordRF(queryNo, t1-t0, mode, threadNo)
       case _ => throw new IllegalStateException()
     }
     res
