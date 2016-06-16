@@ -466,7 +466,8 @@
           "DeviceName": "/dev/sdb",
           "Ebs" : {
             "VolumeSize": { "Ref" : "DataVolumeSize" },
-            "VolumeType": "gp2"
+            "VolumeType": "io1",
+            "Iops": 2000
           }
         },
         {
@@ -675,7 +676,8 @@
           "DeviceName": "/dev/sdb",
           "Ebs" : {
             "VolumeSize": { "Ref" : "DataVolumeSize" },
-            "VolumeType": "gp2"
+            "VolumeType": "io1",
+            "Iops": 2000
           }
         },
         {
