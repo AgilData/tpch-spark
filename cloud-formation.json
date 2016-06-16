@@ -194,7 +194,6 @@
                   "sudo mkdir -p /root/.m2\n",
                   "sudo ln -s /mnt/data/maven_repository /root/.m2/repository\n",
                   "sudo ln -s /mnt/data/ivy2 /root/.ivy2\n",
-                  "git checkout refresh_functions\n",
                   "sbt package\n",
 
                   "echo Started Benchmark!\n",
@@ -228,7 +227,7 @@
                   "   -c ", { "Ref" : "ScaleFactor"},
                   "   -u ", { "Ref" : "BenchmarkUsers" },
                   "   -i /mnt/data/tpch-spark/dbgen ",
-                  "   --mode csv\" > log.txt\n",
+                  "   --mode csv\" > log.txt\n"
 
                 ]]}
               },
