@@ -10,6 +10,8 @@ import org.kududb.client._
 import org.kududb.spark.kudu.KuduContext
 import org.kududb.{ColumnSchema, Schema, Type}
 
+import java.io.File
+
 import scala.collection.JavaConverters._
 
 object Populate {

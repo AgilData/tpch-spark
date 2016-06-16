@@ -8,13 +8,33 @@ import scala.math.BigDecimal.RoundingMode
 class Result(concurrency: Int, sf: Int) {
 
   val power : scala.collection.mutable.Map[Int, Long] = scala.collection.mutable.Map()
+  val powerRF : scala.collection.mutable.Map[String, Long] = scala.collection.mutable.Map()
   val throughputPerQ : scala.collection.mutable.Map[Int, ListBuffer[(Int, Long)]] = scala.collection.mutable.Map()
   val throughputE2E: scala.collection.mutable.Map[Int, Long] = scala.collection.mutable.Map()
+  val throughputRF : scala.collection.mutable.Map[String, ListBuffer[(Int, Long)]] = scala.collection.mutable.Map()
 
   def recordPowerRes(index: Int, time: Long): Unit = {
     //val timeInSec = time.toDouble / 1000
     //power += (index -> Seq(BigDecimal(timeInSec).setScale(2, RoundingMode.HALF_EVEN), BigDecimal(scala.math.log(timeInSec)).setScale(2, RoundingMode.HALF_EVEN)))
     power += (index -> time)
+  }
+
+  def recordRF(funcNo: Int, time: Long, mode: ResultHelper.Mode.Value, thread: Int): Unit = {
+    val key = funcNo match {
+      case 1 => "RF1"
+      case 2 => "RF2"
+    }
+    mode match {
+      case ResultHelper.Mode.PowerRF => powerRF += (key -> time)
+      case ResultHelper.Mode.ThroughputRF =>
+        throughputRF.synchronized {
+          if (!throughputRF.contains(key)) {
+            throughputRF += (key -> ListBuffer((thread,time)))
+          } else {
+            throughputRF.get(key).get += ((thread, time))
+          }
+        }
+    }
   }
 
   // Per query concurrent result
@@ -51,19 +71,25 @@ class Result(concurrency: Int, sf: Int) {
       powerCsvOut.write(row.mkString(","))
       powerCsvOut.write("\n")
     })
+    powerRF.toSeq.sortBy(_._1) foreach ( t => {
+      val row = Seq(t._1) ++ Seq(t._2)
+      powerCsvOut.write(row.mkString(","))
+      powerCsvOut.write("\n")
+    })
     powerCsvOut.close()
+
 
     // record throughput, per query times
     val tpCsvFile = new File(dir, "throughputPerQ.csv")
     val tpCsvOut = new PrintWriter(tpCsvFile)
     println(s"Writing throughput per query results to ${tpCsvFile.getAbsolutePath}")
-    val b = new StringBuilder("Query")
+    var b = new StringBuilder("Query")
     1 to concurrency foreach(n => b.append(",").append(s"time${n}(ms)"))
     tpCsvOut.write(b.toString())
     tpCsvOut.write("\n")
 
     throughputPerQ.toSeq.sortBy(_._1) foreach(t => {
-      val b = new StringBuilder()
+      b = new StringBuilder()
       b.append(t._1)
       // Sort by threadNo
       t._2.toList.sortBy(_._1).foreach(e => b.append(",").append(e._2))
@@ -85,6 +111,23 @@ class Result(concurrency: Int, sf: Int) {
       tpECsvOut.write("\n")
     })
     tpECsvOut.close()
+
+    // record throughput RF
+    val tpRFFile = new File(dir, "throughputRF.csv")
+    val tpRFCsvOut = new PrintWriter(tpRFFile)
+    println(s"Writing throughput end to end results to ${tpRFFile.getAbsolutePath}")
+
+    b = new StringBuilder("RF")
+    1 to concurrency foreach(n => b.append(",").append(s"time${n}(ms)"))
+    tpRFCsvOut.write(b.toString())
+    tpRFCsvOut.write("\n")
+
+    throughputRF.toSeq.sortBy(_._1) foreach(t => {
+      val row = Seq(t._1) ++ Seq(t._2)
+      tpRFCsvOut.write(row.mkString(","))
+      tpRFCsvOut.write("\n")
+    })
+    tpRFCsvOut.close()
 
     // record tpch metrics
     val results = compute()
@@ -116,16 +159,19 @@ class Result(concurrency: Int, sf: Int) {
   def computePower(): Double = {
     // TODO ratio thresholds
 
-    val productTimes = {
+    val queryProduct = {
       var ret: Double = 1d
       power.foreach(e => ret = ret * (e._2.toDouble / 1000))
       ret
     }
 
-    // TODO refresh functions?
-//    val productRF = 0.0d
+    val rfProduct = {
+      var ret: Double = 1d
+      powerRF.foreach(e => ret = ret * (e._2.toDouble / 1000))
+      ret
+    }
 
-    (3600 * sf) / scala.math.pow(productTimes, 1d/24)
+    (3600 * sf).toDouble / scala.math.pow(queryProduct * rfProduct, 1d/24)
   }
 
   //TPC-H Throughput@Size = (S*22*3600)/Ts *SF
@@ -156,19 +202,29 @@ class Result(concurrency: Int, sf: Int) {
 object ResultHelper {
 
   object Mode extends Enumeration {
-    val Power, ThroughputQ, ThroughputE2E = Value
+    val Power, PowerRF, ThroughputQ, ThroughputE2E, ThroughputRF = Value
   }
 
-  def timeAndRecord[R](result: Result, index: Int, mode: Mode.Value, threadNo: Int = 0)(block: => R): R = {
+  def timeAndRecord[R](result: Result, queryNo: Int, mode: Mode.Value, threadNo: Int = 0)(block: => R): R = {
+    val r = time() {block}
+    val t = r._1
+    val res = r._2
+    mode match {
+      case Mode.Power => result.recordPowerRes(queryNo, t)
+      case Mode.ThroughputQ => result.recordThroughputQRes(queryNo, t, threadNo)
+      case Mode.ThroughputE2E => result.recordThroughputE2E(queryNo, t)
+      case Mode.PowerRF | Mode.ThroughputRF => result.recordRF(queryNo, t, mode, threadNo)
+      case _ => throw new IllegalStateException()
+    }
+
+    res
+  }
+
+  def time[R]()(block: => R): (Long,R) = {
     val t0 = System.currentTimeMillis()
     val res = block    // call-by-name
     val t1 = System.currentTimeMillis()
-    mode match {
-      case Mode.Power => result.recordPowerRes(index, t1 - t0)
-      case Mode.ThroughputQ => result.recordThroughputQRes(index, t1 - t0, threadNo)
-      case Mode.ThroughputE2E => result.recordThroughputE2E(index, t1 - t0)
-      case _ => throw new IllegalStateException()
-    }
-    res
+
+    (t1 - t0, res)
   }
 }
