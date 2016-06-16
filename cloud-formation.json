@@ -210,6 +210,9 @@
                   "   --mode populate\"\n",
 
                   "nohup python -m SimpleHTTPServer 80 &\n",
+
+                  "mkdir -p /mnt/data/spark_data\n",
+                  "export SPARK_LOCAL_DIRS=/mnt/data/spark_data\n",
                   "sbt \"run --kuduMaster $ZOOKEEPER_ADDRESS:7051 ",
                   "   --sparkMaster spark://$ZOOKEEPER_ADDRESS:7077 ",
                   "   -f src/main/resources/example_queries.csv ",
