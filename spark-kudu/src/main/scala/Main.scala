@@ -145,6 +145,26 @@ object Main {
 
     }
 
+    // RF thread
+    // TODO even scheduling
+    tasks :+ new Callable[String]() {
+      def call(): String = {
+        for (i <- 1 to users) {
+          ResultHelper.timeAndRecord(result, 1, ResultHelper.Mode.ThroughputRF, i) {
+            Refresh.executeRF1(inputDir, i, execCtx)
+          }
+
+          ResultHelper.timeAndRecord(result, 2, ResultHelper.Mode.ThroughputRF, i) {
+            Refresh.executeRF2(inputDir, i, execCtx)
+          }
+
+          Thread.sleep(1000)
+        }
+
+        "OK"
+      }
+    }
+
     import scala.collection.JavaConversions._
     pool.invokeAll(tasks.toList)
     pool.shutdown()

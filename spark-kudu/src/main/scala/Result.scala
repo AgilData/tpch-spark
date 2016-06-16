@@ -26,12 +26,13 @@ class Result(concurrency: Int, sf: Int) {
     }
     mode match {
       case ResultHelper.Mode.PowerRF => powerRF += (key -> time)
-        // TODO this may change...
       case ResultHelper.Mode.ThroughputRF =>
-        if (!throughputRF.contains(key)) {
-          throughputRF += (key -> ListBuffer((thread,time)))
-        } else {
-          throughputRF.get(key).get += ((thread, time))
+        throughputRF.synchronized {
+          if (!throughputRF.contains(key)) {
+            throughputRF += (key -> ListBuffer((thread,time)))
+          } else {
+            throughputRF.get(key).get += ((thread, time))
+          }
         }
     }
   }
@@ -82,13 +83,13 @@ class Result(concurrency: Int, sf: Int) {
     val tpCsvFile = new File(dir, "throughputPerQ.csv")
     val tpCsvOut = new PrintWriter(tpCsvFile)
     println(s"Writing throughput per query results to ${tpCsvFile.getAbsolutePath}")
-    val b = new StringBuilder("Query")
+    var b = new StringBuilder("Query")
     1 to concurrency foreach(n => b.append(",").append(s"time${n}(ms)"))
     tpCsvOut.write(b.toString())
     tpCsvOut.write("\n")
 
     throughputPerQ.toSeq.sortBy(_._1) foreach(t => {
-      val b = new StringBuilder()
+      b = new StringBuilder()
       b.append(t._1)
       // Sort by threadNo
       t._2.toList.sortBy(_._1).foreach(e => b.append(",").append(e._2))
@@ -110,6 +111,23 @@ class Result(concurrency: Int, sf: Int) {
       tpECsvOut.write("\n")
     })
     tpECsvOut.close()
+
+    // record throughput RF
+    val tpRFFile = new File(dir, "throughputRF.csv")
+    val tpRFCsvOut = new PrintWriter(tpRFFile)
+    println(s"Writing throughput end to end results to ${tpRFFile.getAbsolutePath}")
+
+    b = new StringBuilder("RF")
+    1 to concurrency foreach(n => b.append(",").append(s"time${n}(ms)"))
+    tpRFCsvOut.write(b.toString())
+    tpRFCsvOut.write("\n")
+
+    throughputRF.toSeq.sortBy(_._1) foreach(t => {
+      val row = Seq(t._1) ++ Seq(t._2)
+      tpRFCsvOut.write(row.mkString(","))
+      tpRFCsvOut.write("\n")
+    })
+    tpRFCsvOut.close()
 
     // record tpch metrics
     val results = compute()

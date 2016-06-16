@@ -185,6 +185,8 @@
                   "cd /mnt/data/tpch-spark/dbgen/\n",
                   "./dbgen -qf -s ", { "Ref" : "ScaleFactor" }, "\n",
 
+                  "./dbgen -v -U $((", { "Ref" : "BenchmarkUsers" }, " + 1 )) ", " -s ", { "Ref" : "ScaleFactor" }, "\n",
+
                   "echo Started Benchmark!\n",
                   "echo Signal the status from cfn-init\n",
                   "/usr/local/bin/cfn-signal -e $? ",
@@ -209,6 +211,7 @@
                   "   --executorMemory ", { "Ref" : "ExecMem" },
                   "   -c ", { "Ref" : "ScaleFactor"},
                   "   -u ", { "Ref" : "BenchmarkUsers" },
+                  "   -w ",
                   "   --mode csv\" > log.txt\n"
 
                 ]]}
