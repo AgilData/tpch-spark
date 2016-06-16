@@ -134,23 +134,24 @@ object Main {
     val pool: ExecutorService = Executors.newFixedThreadPool(users)
     val incrementor = new AtomicInteger(0)
     val tasks = {
-      for (i <- 1 to (users + 1)) yield
+      for (i <- 0 to users) yield
 
-        if (i < (users + 1)) {
+        if (i == 0) {
+          // RF thread
           new Callable[String]() {
             def call(): String = {
-              ResultHelper.timeAndRecord(result, i, ResultHelper.Mode.ThroughputE2E) {
-                new TpchQuery(execCtx, result, inputDir).executeQueries(file, queryIdx, ResultHelper.Mode.ThroughputQ, i)
-              }
+              println(s"Executing RF thread. ThreadNo $i")
+              new TpchQuery(execCtx, result, inputDir).executeRFStream(users, Some(incrementor))
               "OK"
             }
           }
         } else {
-          // RF thread
-          // TODO even scheduling, maybe an fsm...
           new Callable[String]() {
             def call(): String = {
-              new TpchQuery(execCtx, result, inputDir).executeRFStream(users, Some(incrementor))
+              println(s"Executing Query stream thread. ThreadNo $i")
+              ResultHelper.timeAndRecord(result, i, ResultHelper.Mode.ThroughputE2E) {
+                new TpchQuery(execCtx, result, inputDir).executeQueries(file, queryIdx, ResultHelper.Mode.ThroughputQ, i, Some(incrementor))
+              }
               "OK"
             }
           }

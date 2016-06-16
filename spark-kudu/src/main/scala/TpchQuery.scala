@@ -46,6 +46,8 @@ class TpchQuery(execCtx: ExecCtx, result: Result, dbGenInputDir: String) {
     for (i <- 1 to users) {
 
       if (incrementor.isDefined) {
+        // Schedule 1 RF pair for each 22 queries executed on query threads
+        // Even distribution of RF pairs
         while (incrementor.get.get() < ((i - 1) *22)) {
           Thread.sleep(1000)
         }
@@ -94,7 +96,7 @@ class TpchQuery(execCtx: ExecCtx, result: Result, dbGenInputDir: String) {
       if (!line.trim.startsWith("--")) {
         val t1 = System.currentTimeMillis()
 
-        println("------------ Running query $idx")
+        println(s"------------ Running query $idx")
         val q = getQuery(line)
         var cnt: Long = 0
 
@@ -126,7 +128,8 @@ class TpchQuery(execCtx: ExecCtx, result: Result, dbGenInputDir: String) {
     println(s"Executing: Query ${q.query} with limit ${q.limit} and params: ${q.params}")
 
     if (incrementor.isDefined) {
-      incrementor.get.getAndIncrement()
+      val inc = incrementor.get.getAndIncrement()
+      println(s"Progressing counter to $inc")
     }
 
     val res = q.query match {
