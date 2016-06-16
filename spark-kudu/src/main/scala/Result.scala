@@ -171,7 +171,7 @@ class Result(concurrency: Int, sf: Int) {
       ret
     }
 
-    (3600 * sf) / scala.math.pow((queryProduct * rfProduct), 1d/24)
+    (3600 * sf).toDouble / scala.math.pow(queryProduct * rfProduct, 1d/24)
   }
 
   //TPC-H Throughput@Size = (S*22*3600)/Ts *SF

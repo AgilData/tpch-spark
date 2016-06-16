@@ -50,7 +50,9 @@ class TpchQuery(execCtx: ExecCtx, result: Result, dbGenInputDir: String) {
         // Even distribution of RF pairs
         while (incrementor.get.get() < ((i - 1) *22)) {
           Thread.sleep(1000)
+          println(s"Sleeping...counter is ${incrementor.get.get()}")
         }
+        println(s"PROCEED!")
       } else {
         Thread.sleep(1000)
       }

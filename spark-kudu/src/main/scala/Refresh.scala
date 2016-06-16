@@ -90,9 +90,11 @@ object Refresh {
         kuduContext.delete(Seq(orderKey, f.getInt(0)), Seq("l_orderkey", "l_linenumber"),"lineitem", session)
         deletes +=1
       })
-      session.flush()
+
     }
 
+    session.flush()
+    
     println(s"RF1 completes $deletes deletes!")
 
     session.close()
