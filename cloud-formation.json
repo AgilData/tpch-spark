@@ -74,6 +74,12 @@
       "ConstraintDescription" : "must be a valid EC2 instance type."
     },
 
+    "IOPS" : {
+      "Default": "1000",
+      "Description" : "Number of iops for data and wal drive, ratio should be 30:1 to volume size",
+      "Type": "Number"
+    }
+
     "SSHLocation" : {
       "Description" : " The IP address range that can be used to SSH to the EC2 instances",
       "Type": "String",
@@ -272,7 +278,7 @@
           "Ebs" : {
             "VolumeSize": { "Ref" : "DataVolumeSize" },
             "VolumeType": "io1",
-            "Iops": 2000
+            "Iops": { "Ref" : "IOPS"}
           }
         }],
         "UserData": {
@@ -472,7 +478,7 @@
           "Ebs" : {
             "VolumeSize": { "Ref" : "DataVolumeSize" },
             "VolumeType": "io1",
-            "Iops": 2000
+            "Iops": { "Ref" : "IOPS"}
           }
         },
         {
@@ -480,7 +486,7 @@
           "Ebs" : {
             "VolumeSize": { "Ref" : "WalVolumeSize" },
             "VolumeType": "io1",
-            "Iops": 2000
+            "Iops": { "Ref" : "IOPS"}
           }
         }],
         "UserData": {
@@ -682,7 +688,7 @@
           "Ebs" : {
             "VolumeSize": { "Ref" : "DataVolumeSize" },
             "VolumeType": "io1",
-            "Iops": 2000
+            "Iops": { "Ref" : "IOPS"}
           }
         },
         {
@@ -690,7 +696,7 @@
           "Ebs" : {
             "VolumeSize": { "Ref" : "WalVolumeSize" },
             "VolumeType": "io1",
-            "Iops": 2000
+            "Iops": { "Ref" : "IOPS"}
           }
         }],
         "UserData": {
