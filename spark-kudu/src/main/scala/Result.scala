@@ -159,16 +159,19 @@ class Result(concurrency: Int, sf: Int) {
   def computePower(): Double = {
     // TODO ratio thresholds
 
-    val productTimes = {
+    val queryProduct = {
       var ret: Double = 1d
       power.foreach(e => ret = ret * (e._2.toDouble / 1000))
       ret
     }
 
-    // TODO refresh functions?
-//    val productRF = 0.0d
+    val rfProduct = {
+      var ret: Double = 1d
+      powerRF.foreach(e => ret = ret * (e._2.toDouble / 1000))
+      ret
+    }
 
-    (3600 * sf) / scala.math.pow(productTimes, 1d/24)
+    (3600 * sf) / scala.math.pow((queryProduct * rfProduct), 1d/24)
   }
 
   //TPC-H Throughput@Size = (S*22*3600)/Ts *SF

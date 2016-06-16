@@ -146,20 +146,33 @@ object Main {
     }
 
     // RF thread
-    // TODO even scheduling
+    // TODO even scheduling, maybe an fsm...
     tasks :+ new Callable[String]() {
       def call(): String = {
+        println(s"Executing Throughput RF thread with $users iterations")
+
         for (i <- 1 to users) {
-          ResultHelper.timeAndRecord(result, 1, ResultHelper.Mode.ThroughputRF, i) {
-            Refresh.executeRF1(inputDir, i, execCtx)
+
+          try {
+            ResultHelper.timeAndRecord(result, 1, ResultHelper.Mode.ThroughputRF, i) {
+              Refresh.executeRF1(inputDir, i, execCtx)
+            }
+
+            ResultHelper.timeAndRecord(result, 2, ResultHelper.Mode.ThroughputRF, i) {
+              Refresh.executeRF2(inputDir, i, execCtx)
+            }
+
+            Thread.sleep(1000)
+          } catch {
+            case e: Exception =>
+              println("Throughput RF Thread FAILED")
+              e.printStackTrace()
           }
 
-          ResultHelper.timeAndRecord(result, 2, ResultHelper.Mode.ThroughputRF, i) {
-            Refresh.executeRF2(inputDir, i, execCtx)
-          }
-
-          Thread.sleep(1000)
         }
+
+        println(s"Completed Throughput RF thread with $users iterations")
+
 
         "OK"
       }
