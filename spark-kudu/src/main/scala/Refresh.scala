@@ -91,10 +91,10 @@ object Refresh {
         deletes +=1
       })
 
+      session.flush()
+
     }
 
-    session.flush()
-    
     println(s"RF1 completes $deletes deletes!")
 
     session.close()
