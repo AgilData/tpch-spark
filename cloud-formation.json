@@ -212,7 +212,8 @@
                   "   --executorMemory ", { "Ref" : "ExecMem" },
                   "   -c ", { "Ref" : "ScaleFactor"},
                   "   -u ", { "Ref" : "BenchmarkUsers" },
-                  "   --mode csv\" > log.txt\n"
+                  "   --mode csv\" > log.txt\n",
+                  "   -i /mnt/data/tpch-spark/dbgen"
 
                 ]]}
               },
