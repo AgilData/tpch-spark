@@ -428,6 +428,8 @@
 
                   "ulimit -n 100000\n",
                   "cd /mnt/data/spark\n",
+                  "mkdir -p /mnt/data/spark_data\n",
+                  "export SPARK_LOCAL_DIRS=/mnt/data/spark_data\n",
                   "./sbin/start-slave.sh --memory ", { "Ref" : "WorkerMem" }," spark://${ZOOKEEPER_ADDRESS}:7077 &\n",
                   "cd /mnt/data/kudu/build/release\n",
                   "nohup bin/kudu-tserver -fs_wal_dir=/mnt/wals -fs_data_dirs=/var/lib/kudu/master -tserver_master_addrs ${ZOOKEEPER_ADDRESS} -logtostderr -use_hybrid_clock=false &\n",
@@ -621,6 +623,8 @@
                   "ln -s /mnt/data/kudu_data /var/lib/kudu\n",
 
                   "cd /mnt/data/spark\n",
+                  "mkdir -p /mnt/data/spark_data\n",
+                  "export SPARK_LOCAL_DIRS=/mnt/data/spark_data\n",
                   "./sbin/start-master.sh\n",
                   "cd /mnt/data/kudu/build/release\n",
                   "mkdir -p /root/wals\n",
