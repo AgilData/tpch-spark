@@ -39,6 +39,33 @@ class TpchQuery(execCtx: ExecCtx, result: Result, dbGenInputDir: String) {
   val order: DataFrame = sqlCtx.table("`order`")
   val lineitem: DataFrame = sqlCtx.table("lineitem")
 
+  def executeRFStream(users: Int): Unit = {
+    println(s"Executing Throughput RF thread with $users iterations")
+
+    for (i <- 1 to users) {
+
+      try {
+        ResultHelper.timeAndRecord(result, 1, ResultHelper.Mode.ThroughputRF, i) {
+          Refresh.executeRF1(dbGenInputDir, i, execCtx)
+        }
+
+        ResultHelper.timeAndRecord(result, 2, ResultHelper.Mode.ThroughputRF, i) {
+          Refresh.executeRF2(dbGenInputDir, i, execCtx)
+        }
+
+        Thread.sleep(1000)
+      } catch {
+        case e: Exception =>
+          println("Throughput RF Thread FAILED")
+          e.printStackTrace()
+      }
+
+    }
+
+    println(s"Completed Throughput RF thread with $users iterations")
+
+  }
+
   def executeQueries(file: File,
                      queryIdx: String,
                      mode: ResultHelper.Mode.Value,

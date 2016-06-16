@@ -132,50 +132,27 @@ object Main {
     println(s"Executing throughput benchmark... Concurrency: $users")
     val pool: ExecutorService = Executors.newFixedThreadPool(users)
     val tasks = {
-      for (i <- 1 to users) yield
+      for (i <- 1 to (users + 1)) yield
 
-        new Callable[String]() {
-          def call(): String = {
-            ResultHelper.timeAndRecord(result, i, ResultHelper.Mode.ThroughputE2E) {
-              new TpchQuery(execCtx, result, inputDir).executeQueries(file, queryIdx, ResultHelper.Mode.ThroughputQ, i)
+        if (i < (users + 1)) {
+          new Callable[String]() {
+            def call(): String = {
+              ResultHelper.timeAndRecord(result, i, ResultHelper.Mode.ThroughputE2E) {
+                new TpchQuery(execCtx, result, inputDir).executeQueries(file, queryIdx, ResultHelper.Mode.ThroughputQ, i)
+              }
+              "OK"
             }
-            "OK"
+          }
+        } else {
+          // RF thread
+          // TODO even scheduling, maybe an fsm...
+          new Callable[String]() {
+            def call(): String = {
+              new TpchQuery(execCtx, result, inputDir).executeRFStream(users)
+              "OK"
+            }
           }
         }
-
-    }
-
-    // RF thread
-    // TODO even scheduling, maybe an fsm...
-    tasks :+ new Callable[String]() {
-      def call(): String = {
-        println(s"Executing Throughput RF thread with $users iterations")
-
-        for (i <- 1 to users) {
-
-          try {
-            ResultHelper.timeAndRecord(result, 1, ResultHelper.Mode.ThroughputRF, i) {
-              Refresh.executeRF1(inputDir, i, execCtx)
-            }
-
-            ResultHelper.timeAndRecord(result, 2, ResultHelper.Mode.ThroughputRF, i) {
-              Refresh.executeRF2(inputDir, i, execCtx)
-            }
-
-            Thread.sleep(1000)
-          } catch {
-            case e: Exception =>
-              println("Throughput RF Thread FAILED")
-              e.printStackTrace()
-          }
-
-        }
-
-        println(s"Completed Throughput RF thread with $users iterations")
-
-
-        "OK"
-      }
     }
 
     import scala.collection.JavaConversions._
