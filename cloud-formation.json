@@ -294,7 +294,7 @@
             "xfs_growfs /mnt/data\n",
 
             "apt-get update\n",
-            "apt-get -y install python-setuptools\n",
+            "apt-get -y install python-setuptools awscli\n",
             "mkdir aws-cfn-bootstrap-latest\n",
             "curl https://s3.amazonaws.com/cloudformation-examples/aws-cfn-bootstrap-latest.tar.gz | tar xz -C aws-cfn-bootstrap-latest --strip-components 1\n",
             "easy_install aws-cfn-bootstrap-latest\n",
@@ -509,7 +509,7 @@
             "xfs_growfs /mnt/data\n",
 
             "apt-get update\n",
-            "apt-get -y install python-setuptools\n",
+            "apt-get -y install python-setuptools awscli\n",
             "mkdir aws-cfn-bootstrap-latest\n",
             "curl https://s3.amazonaws.com/cloudformation-examples/aws-cfn-bootstrap-latest.tar.gz | tar xz -C aws-cfn-bootstrap-latest --strip-components 1\n",
             "easy_install aws-cfn-bootstrap-latest\n",
@@ -721,7 +721,7 @@
             "xfs_growfs /mnt/data\n",
 
             "apt-get update\n",
-            "apt-get -y install python-setuptools\n",
+            "apt-get -y install python-setuptools awscli\n",
             "mkdir aws-cfn-bootstrap-latest\n",
             "curl https://s3.amazonaws.com/cloudformation-examples/aws-cfn-bootstrap-latest.tar.gz | tar xz -C aws-cfn-bootstrap-latest --strip-components 1\n",
             "easy_install aws-cfn-bootstrap-latest\n",
