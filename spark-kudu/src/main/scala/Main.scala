@@ -9,6 +9,7 @@ import org.apache.spark.broadcast.Broadcast
 import org.apache.spark.sql.SQLContext
 import org.apache.spark.{SparkConf, SparkContext}
 import org.apache.log4j.{Level, Logger}
+import org.ini4j.{Ini, IniPreferences}
 
 case class ExecCtx(sparkCtx: SparkContext, sqlCtx: SQLContext, kuduCtx: Broadcast[ExtendedKuduContext])
 
@@ -78,6 +79,17 @@ object Main {
       .set("spark.sql.tungsten.enabled", "true")
       .set("spark.sql.shuffle.partitions", PARTITION_COUNT)
       .set("spark.serializer", "org.apache.spark.serializer.KryoSerializer")
+
+    val home = new File(System.getProperty("user.home"))
+    val creds = new File(home, ".aws/credentials")
+    if(creds.exists()) {
+      val prefs = new IniPreferences(new Ini(creds))
+      val keyId = prefs.node("default").get("aws_access_key_id", null)
+      val accessKey = prefs.node("default").get("aws_secret_access_key", null)
+      conf.set("fs.s3n.awsAccessKeyId", keyId)
+      conf.set("fs.s3n.awsSecretAccessKey", accessKey)
+    }
+
     val sparkCtx = new SparkContext(conf)
     sparkCtx.addJar("/mnt/data/maven_repository/org/kududb/kudu-spark_2.11/1.0.0-SNAPSHOT/kudu-spark_2.11-1.0.0-SNAPSHOT.jar")
     sparkCtx.addJar("/mnt/data/tpch-spark/spark-kudu/target/scala-2.11/spark-tpc-h-queries_2.11-1.1-SNAPSHOT.jar")

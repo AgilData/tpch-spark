@@ -133,7 +133,7 @@ class Populate(execCtx: ExecCtx, inputDir: String) {
       .format("com.databricks.spark.csv")
       .option("header", "true")
       .option("codec", "org.apache.hadoop.io.compress.GzipCodec")
-      .save(s"$tableName.csv.gz")
+      .save(s"s3n://brent-emr-test/s3test/$tableName.csv.gz")
   }
 
 }
