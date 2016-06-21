@@ -24,5 +24,7 @@ libraryDependencies += "org.kududb" % "kudu-client" % "1.0.0-SNAPSHOT"
 
 libraryDependencies += "commons-cli" % "commons-cli" % "1.3"
 
+libraryDependencies += "com.databricks" % "spark-csv" % "1.4.0"
+
 resolvers += "Local Maven Repository" at "file:///"+Path.userHome+"/.m2/repository"
 

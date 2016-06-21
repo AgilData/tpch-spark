@@ -86,7 +86,8 @@ object Main {
     val execCtx = ExecCtx(sparkCtx, sqlCtx, kuduCtx)
 
     MODE match {
-      case "populate" => Populate.executeImport(execCtx, INPUT_DIR)
+      case "populate" => new Populate(execCtx, INPUT_DIR).executeImport()
+      case "split" => new Populate(execCtx, INPUT_DIR).splitCsv()
       case "sql" => RunQueries.execute(execCtx, cmd.getOptionValue("q"))
       case "csv" => {
 
