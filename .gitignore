@@ -31,3 +31,4 @@ target
 
 *.tbl
 *.tar.gz
+*.csv.gz

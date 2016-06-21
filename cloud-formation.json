@@ -265,7 +265,7 @@
         }
       },
       "Properties": {
-        "ImageId" : "ami-e0de258d",
+        "ImageId" : "ami-fc9d5e91",
         "AvailabilityZone" : "us-east-1b",
         "InstanceType"   : { "Ref" : "InstanceType" },
         "SecurityGroups" : [ {"Ref" : "TestRunnerSecurityGroup"} ],
@@ -472,7 +472,7 @@
         }
       },
       "Properties": {
-        "ImageId" : "ami-e0de258d",
+        "ImageId" : "ami-fc9d5e91",
         "InstanceType" : { "Ref" : "InstanceType" },
         "SecurityGroups" : [ {"Ref" : "TServerSecurityGroup"} ],
         "IamInstanceProfile": { "Ref": "LogRoleInstanceProfile" },
@@ -679,7 +679,7 @@
         }
       },
       "Properties": {
-        "ImageId" : "ami-e0de258d",
+        "ImageId" : "ami-fc9d5e91",
         "AvailabilityZone" : "us-east-1b",
         "InstanceType"   : { "Ref" : "InstanceType" },
         "SecurityGroups" : [ {"Ref" : "KuduSparkMasterSecurityGroup"} ],
