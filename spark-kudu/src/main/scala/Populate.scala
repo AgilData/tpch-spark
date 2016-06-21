@@ -103,15 +103,15 @@ class Populate(execCtx: ExecCtx, inputDir: String) {
     writeToKudu(kuduContext, supplier, "supplier", List("s_suppkey"))
   }
 
-  def splitCsv() {
-    writeToCsv(customer, "customer")
-    writeToCsv(lineitem, "lineitem")
-    writeToCsv(nation, "nation")
-    writeToCsv(region, "region")
-    writeToCsv(order, "order")
-    writeToCsv(part, "part")
-    writeToCsv(partsupp, "partsupp")
-    writeToCsv(supplier, "supplier")
+  def splitCsv(scaleFactor: Int) {
+    writeToCsv(customer, "customer", scaleFactor)
+    writeToCsv(lineitem, "lineitem", scaleFactor)
+    writeToCsv(nation, "nation", scaleFactor)
+    writeToCsv(region, "region", scaleFactor)
+    writeToCsv(order, "order", scaleFactor)
+    writeToCsv(part, "part", scaleFactor)
+    writeToCsv(partsupp, "partsupp", scaleFactor)
+    writeToCsv(supplier, "supplier", scaleFactor)
   }
 
   def writeToKudu(kuduContext: Broadcast[ExtendedKuduContext], df: DataFrame, tableName: String, pk: Seq[String]): Unit = {
@@ -128,12 +128,12 @@ class Populate(execCtx: ExecCtx, inputDir: String) {
     kc.save(df, tableName)
   }
 
-  def writeToCsv(df: DataFrame, tableName: String) {
+  def writeToCsv(df: DataFrame, tableName: String, scaleFactor: Int) {
     df.write
       .format("com.databricks.spark.csv")
       .option("header", "true")
       .option("codec", "org.apache.hadoop.io.compress.GzipCodec")
-      .save(s"s3n://brent-emr-test/s3test/$tableName.csv.gz")
+      .save(s"s3n://brent-emr-test/tpch/${scaleFactor}x/$tableName.csv.gz")
   }
 
 }
