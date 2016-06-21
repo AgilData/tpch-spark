@@ -92,7 +92,31 @@ class Populate(execCtx: ExecCtx, inputDir: String) {
     importCsvToKudu(execCtx.kuduCtx, inputDir)
   }
 
+  def executeIngest(scaleFactor: Int): Unit = {
+    importGzToKudu(execCtx.kuduCtx, scaleFactor)
+  }
+
   def importCsvToKudu(kuduContext: Broadcast[ExtendedKuduContext], inputDir: String) {
+    writeToKudu(kuduContext, customer, "customer", List("c_custkey"))
+    writeToKudu(kuduContext, lineitem, "lineitem", List("l_orderkey", "l_linenumber"))
+    writeToKudu(kuduContext, nation, "nation", List("n_nationkey"))
+    writeToKudu(kuduContext, region, "region", List("r_regionkey"))
+    writeToKudu(kuduContext, order, "order", List("o_orderkey"))
+    writeToKudu(kuduContext, part, "part", List("p_partkey"))
+    writeToKudu(kuduContext, partsupp, "partsupp", List("ps_partkey", "ps_suppkey"))
+    writeToKudu(kuduContext, supplier, "supplier", List("s_suppkey"))
+  }
+
+  def importGzToKudu(kuduContext: Broadcast[ExtendedKuduContext], scaleFactor: Int) {
+    val customer = sqlContext.read.format("com.databricks.spark.csv").option("header", "true").option("inferSchema", "true").load(s"s3://brent-emr-test/tpch/${scaleFactor}x/customer.csv.gz")
+    val lineitem = sqlContext.read.format("com.databricks.spark.csv").option("header", "true").option("inferSchema", "true").load(s"s3://brent-emr-test/tpch/${scaleFactor}x/lineitem.csv.gz")
+    val nation = sqlContext.read.format("com.databricks.spark.csv").option("header", "true").option("inferSchema", "true").load(s"s3://brent-emr-test/tpch/${scaleFactor}x/nation.csv.gz")
+    val region = sqlContext.read.format("com.databricks.spark.csv").option("header", "true").option("inferSchema", "true").load(s"s3://brent-emr-test/tpch/${scaleFactor}x/region.csv.gz")
+    val order = sqlContext.read.format("com.databricks.spark.csv").option("header", "true").option("inferSchema", "true").load(s"s3://brent-emr-test/tpch/${scaleFactor}x/order.csv.gz")
+    val part = sqlContext.read.format("com.databricks.spark.csv").option("header", "true").option("inferSchema", "true").load(s"s3://brent-emr-test/tpch/${scaleFactor}x/part.csv.gz")
+    val partsupp = sqlContext.read.format("com.databricks.spark.csv").option("header", "true").option("inferSchema", "true").load(s"s3://brent-emr-test/tpch/${scaleFactor}x/partsupp.csv.gz")
+    val supplier = sqlContext.read.format("com.databricks.spark.csv").option("header", "true").option("inferSchema", "true").load(s"s3://brent-emr-test/tpch/${scaleFactor}x/supplier.csv.gz")
+
     writeToKudu(kuduContext, customer, "customer", List("c_custkey"))
     writeToKudu(kuduContext, lineitem, "lineitem", List("l_orderkey", "l_linenumber"))
     writeToKudu(kuduContext, nation, "nation", List("n_nationkey"))

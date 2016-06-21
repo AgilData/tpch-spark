@@ -100,6 +100,10 @@ object Main {
     MODE match {
       case "populate" =>
         new Populate(execCtx, INPUT_DIR).executeImport()
+      case "ingest" => {
+        val scaleFactor = Integer.parseInt(cmd.getOptionValue("c"))
+        new Populate(execCtx, INPUT_DIR).executeIngest(scaleFactor)
+      }
       case "split" => {
         val scaleFactor = Integer.parseInt(cmd.getOptionValue("c"))
         new Populate(execCtx, INPUT_DIR).splitCsv(scaleFactor)
