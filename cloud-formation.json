@@ -191,6 +191,7 @@
                   "make\n",
 
                   "cd /mnt/data/tpch-spark/spark-kudu\n",
+                  "git checkout graphite\n",
                   "sudo mkdir -p /root/.m2\n",
                   "sudo ln -s /mnt/data/maven_repository /root/.m2/repository\n",
                   "sudo ln -s /mnt/data/ivy2 /root/.ivy2\n",
@@ -292,6 +293,13 @@
             "exec 1>boot.out 2>&1\n",
 
             "xfs_growfs /mnt/data\n",
+
+            "service carbon-cache stop\n",
+
+            "sed -i -e 's/{MY_PUBLIC_IP}/", {"Fn::GetAtt" : ["AWS::EC2::Instance", "PublicIp"]} ,"/g' /etc/collectd/collectd.conf\n",
+            "sed -i -e 's/{MASTER_PRIVATE_IP}/", {"Fn::GetAtt" : ["MasterInstance", "PrivateI"]} ,"/g' /etc/collectd/collectd.conf\n",
+
+            "service collectd restart\n",
 
             "apt-get update\n",
             "apt-get -y install python-setuptools awscli\n",
@@ -508,6 +516,14 @@
             "xfs_growfs /mnt/wals\n",
             "xfs_growfs /mnt/data\n",
 
+            "service carbon-cache stop\n",
+
+            "sed -i -e 's/{MY_PUBLIC_IP}/", {"Fn::GetAtt" : ["AWS::EC2::Instance", "PublicIp"]} ,"/g' /etc/collectd/collectd.conf\n",
+            "sed -i -e 's/{MASTER_PRIVATE_IP}/", {"Fn::GetAtt" : ["MasterInstance", "PrivateI"]} ,"/g' /etc/collectd/collectd.conf\n",
+            "sed -i -e 's/#{CF_UNCOMMENT}//g' /etc/collectd/collectd.conf\n",
+
+            "service collectd restart\n",
+
             "apt-get update\n",
             "apt-get -y install python-setuptools awscli\n",
             "mkdir aws-cfn-bootstrap-latest\n",
@@ -719,6 +735,13 @@
 
             "xfs_growfs /mnt/wals\n",
             "xfs_growfs /mnt/data\n",
+
+            "sed -i -e 's/{MY_PUBLIC_IP}/", {"Fn::GetAtt" : ["AWS::EC2::Instance", "PublicIp"]} ,"/g' /etc/collectd/collectd.conf\n",
+            "sed -i -e 's/{MASTER_PRIVATE_IP}/", {"Fn::GetAtt" : ["MasterInstance", "PrivateI"]} ,"/g' /etc/collectd/collectd.conf\n",
+
+            "service collectd restart\n",
+            "service carbon-cache restart\n",
+            "service apache2 restart\n"
 
             "apt-get update\n",
             "apt-get -y install python-setuptools awscli\n",
