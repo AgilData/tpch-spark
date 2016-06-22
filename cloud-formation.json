@@ -296,7 +296,6 @@
 
             "service carbon-cache stop\n",
 
-            "sed -i -e 's/{MY_PUBLIC_IP}/", {"Fn::GetAtt" : ["AWS::EC2::Instance", "PublicIp"]} ,"/g' /etc/collectd/collectd.conf\n",
             "sed -i -e 's/{MASTER_PRIVATE_IP}/", {"Fn::GetAtt" : ["MasterInstance", "PrivateI"]} ,"/g' /etc/collectd/collectd.conf\n",
 
             "service collectd restart\n",
@@ -518,7 +517,6 @@
 
             "service carbon-cache stop\n",
 
-            "sed -i -e 's/{MY_PUBLIC_IP}/", {"Fn::GetAtt" : ["AWS::EC2::Instance", "PublicIp"]} ,"/g' /etc/collectd/collectd.conf\n",
             "sed -i -e 's/{MASTER_PRIVATE_IP}/", {"Fn::GetAtt" : ["MasterInstance", "PrivateI"]} ,"/g' /etc/collectd/collectd.conf\n",
             "sed -i -e 's/#{CF_UNCOMMENT}//g' /etc/collectd/collectd.conf\n",
 
@@ -736,12 +734,11 @@
             "xfs_growfs /mnt/wals\n",
             "xfs_growfs /mnt/data\n",
 
-            "sed -i -e 's/{MY_PUBLIC_IP}/", {"Fn::GetAtt" : ["AWS::EC2::Instance", "PublicIp"]} ,"/g' /etc/collectd/collectd.conf\n",
             "sed -i -e 's/{MASTER_PRIVATE_IP}/", {"Fn::GetAtt" : ["MasterInstance", "PrivateI"]} ,"/g' /etc/collectd/collectd.conf\n",
 
             "service collectd restart\n",
             "service carbon-cache restart\n",
-            "service apache2 restart\n"
+            "service apache2 restart\n",
 
             "apt-get update\n",
             "apt-get -y install python-setuptools awscli\n",
