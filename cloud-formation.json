@@ -191,7 +191,6 @@
                   "make\n",
 
                   "cd /mnt/data/tpch-spark/spark-kudu\n",
-                  "git checkout graphite\n",
                   "sudo mkdir -p /root/.m2\n",
                   "sudo ln -s /mnt/data/maven_repository /root/.m2/repository\n",
                   "sudo ln -s /mnt/data/ivy2 /root/.ivy2\n",
@@ -303,7 +302,7 @@
 
             "apt-get update\n",
             "apt-get -y install python-setuptools awscli\n",
-            "mkdir aws-cfn-bootstrap-latest\n",
+            "mkdir -p aws-cfn-bootstrap-latest\n",
             "curl https://s3.amazonaws.com/cloudformation-examples/aws-cfn-bootstrap-latest.tar.gz | tar xz -C aws-cfn-bootstrap-latest --strip-components 1\n",
             "easy_install aws-cfn-bootstrap-latest\n",
 
@@ -527,7 +526,7 @@
 
             "apt-get update\n",
             "apt-get -y install python-setuptools awscli\n",
-            "mkdir aws-cfn-bootstrap-latest\n",
+            "mkdir -p aws-cfn-bootstrap-latest\n",
             "curl https://s3.amazonaws.com/cloudformation-examples/aws-cfn-bootstrap-latest.tar.gz | tar xz -C aws-cfn-bootstrap-latest --strip-components 1\n",
             "easy_install aws-cfn-bootstrap-latest\n",
 
@@ -737,8 +736,8 @@
             "xfs_growfs /mnt/wals\n",
             "xfs_growfs /mnt/data\n",
 
-            "sed -i -e 's/{MASTER_PRIVATE_IP}/", {"Fn::GetAtt" : ["MasterInstance", "PrivateIp"]} ,"/g' /etc/collectd/collectd.conf\n",
-            "sed -i -e 's/{MASTER_PRIVATE_IP}/", {"Fn::GetAtt" : ["MasterInstance", "PrivateIp"]} ,"/g' /mnt/data/spark/conf/metrics.properties\n",
+            "sed -i -e 's/{MASTER_PRIVATE_IP}/127.0.0.1/g' /etc/collectd/collectd.conf\n",
+            "sed -i -e 's/{MASTER_PRIVATE_IP}/127.0.0.1/g' /mnt/data/spark/conf/metrics.properties\n",
 
 
             "service collectd restart\n",
@@ -747,7 +746,7 @@
 
             "apt-get update\n",
             "apt-get -y install python-setuptools awscli\n",
-            "mkdir aws-cfn-bootstrap-latest\n",
+            "mkdir -p aws-cfn-bootstrap-latest\n",
             "curl https://s3.amazonaws.com/cloudformation-examples/aws-cfn-bootstrap-latest.tar.gz | tar xz -C aws-cfn-bootstrap-latest --strip-components 1\n",
             "easy_install aws-cfn-bootstrap-latest\n",
             "\n",
