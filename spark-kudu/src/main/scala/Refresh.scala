@@ -8,6 +8,7 @@ import org.apache.spark.sql.{DataFrame, SQLContext}
 import org.apache.spark.sql.functions._
 import org.kududb.spark.kudu._
 
+import scala.collection.mutable.ListBuffer
 import scala.io.Source
 
 /**
@@ -93,8 +94,9 @@ object Refresh {
       // TODO this is wildly inefficient
       val r = ResultHelper.time() {
         sqlContext.table("lineitem")
-        .select("l_linenumber")
-        .filter($"l_orderkey" === orderKey).collect()
+        .where($"l_orderkey" === orderKey)
+          .select("l_linenumber")
+          .collect()
       }
 
       totalLookup += r._1
@@ -111,8 +113,8 @@ object Refresh {
 
     println(s"RF2 completes $oDeletes order and $lDeletes lineitem deletes!")
     println(s"RF2 completes avg order delete time: ${totalODelete.toDouble/oDeletes}ms")
-    println(s"RF2 completes avg lineitem delete time: ${totalLDelete.toDouble/lDeletes}ms")
-    println(s"RF2 completes avg lookup time: ${totalLookup.toDouble/lDeletes}ms")
+    println(s"RF2 completes avg lineitem delete time: ${totalLDelete.toDouble/oDeletes}ms")
+    println(s"RF2 completes avg lookup time: ${totalLookup.toDouble/oDeletes}ms")
     println(s"RF2 completes avg flush time: ${totalFlush.toDouble/oDeletes}ms")
 
     session.close()
