@@ -80,22 +80,23 @@ object Main {
       .set("spark.sql.shuffle.partitions", PARTITION_COUNT)
       .set("spark.serializer", "org.apache.spark.serializer.KryoSerializer")
 
-    val home = new File(System.getProperty("user.home"))
-    val creds = new File(home, ".aws/credentials")
-    if(creds.exists()) {
-      val prefs = new IniPreferences(new Ini(creds))
-      val keyId = prefs.node("default").get("aws_access_key_id", null)
-      val accessKey = prefs.node("default").get("aws_secret_access_key", null)
-      conf.set("fs.s3n.awsAccessKeyId", keyId)
-      conf.set("fs.s3n.awsSecretAccessKey", accessKey)
-    }
-
     val sparkCtx = new SparkContext(conf)
     sparkCtx.addJar("/mnt/data/maven_repository/org/kududb/kudu-spark_2.11/1.0.0-SNAPSHOT/kudu-spark_2.11-1.0.0-SNAPSHOT.jar")
     sparkCtx.addJar("/mnt/data/tpch-spark/spark-kudu/target/scala-2.11/spark-tpc-h-queries_2.11-1.1-SNAPSHOT.jar")
     val sqlCtx = new org.apache.spark.sql.SQLContext(sparkCtx)
     val kuduCtx = sparkCtx.broadcast(new ExtendedKuduContext(KUDU_MASTER))
     val execCtx = ExecCtx(sparkCtx, sqlCtx, kuduCtx)
+
+    val home = new File(System.getProperty("user.home"))
+    val creds = new File(home, ".aws/credentials")
+    if(creds.exists()) {
+      val prefs = new IniPreferences(new Ini(creds))
+      val keyId = prefs.node("default").get("aws_access_key_id", null)
+      val accessKey = prefs.node("default").get("aws_secret_access_key", null)
+      println(s"------ $keyId")
+      sparkCtx.hadoopConfiguration.set("fs.s3n.awsAccessKeyId", keyId)
+      sparkCtx.hadoopConfiguration.set("fs.s3n.awsSecretAccessKey", accessKey)
+    }
 
     MODE match {
       case "populate" =>
