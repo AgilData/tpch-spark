@@ -296,8 +296,8 @@
 
             "service carbon-cache stop\n",
 
-            "sed -i -e 's/{MASTER_PRIVATE_IP}/", {"Fn::GetAtt" : ["MasterInstance", "PrivateI"]} ,"/g' /etc/collectd/collectd.conf\n",
-            "sed -i -e 's/{MASTER_PRIVATE_IP}/", {"Fn::GetAtt" : ["MasterInstance", "PrivateI"]} ,"/g' /mnt/data/spark/conf/metrics.properties\n",
+            "sed -i -e 's/{MASTER_PRIVATE_IP}/", {"Fn::GetAtt" : ["MasterInstance", "PrivateIp"]} ,"/g' /etc/collectd/collectd.conf\n",
+            "sed -i -e 's/{MASTER_PRIVATE_IP}/", {"Fn::GetAtt" : ["MasterInstance", "PrivateIp"]} ,"/g' /mnt/data/spark/conf/metrics.properties\n",
 
             "service collectd restart\n",
 
@@ -518,8 +518,8 @@
 
             "service carbon-cache stop\n",
 
-            "sed -i -e 's/{MASTER_PRIVATE_IP}/", {"Fn::GetAtt" : ["MasterInstance", "PrivateI"]} ,"/g' /etc/collectd/collectd.conf\n",
-            "sed -i -e 's/{MASTER_PRIVATE_IP}/", {"Fn::GetAtt" : ["MasterInstance", "PrivateI"]} ,"/g' /mnt/data/spark/conf/metrics.properties\n",
+            "sed -i -e 's/{MASTER_PRIVATE_IP}/", {"Fn::GetAtt" : ["MasterInstance", "PrivateIp"]} ,"/g' /etc/collectd/collectd.conf\n",
+            "sed -i -e 's/{MASTER_PRIVATE_IP}/", {"Fn::GetAtt" : ["MasterInstance", "PrivateIp"]} ,"/g' /mnt/data/spark/conf/metrics.properties\n",
 
             "sed -i -e 's/#{CF_UNCOMMENT}//g' /etc/collectd/collectd.conf\n",
 
@@ -737,8 +737,8 @@
             "xfs_growfs /mnt/wals\n",
             "xfs_growfs /mnt/data\n",
 
-            "sed -i -e 's/{MASTER_PRIVATE_IP}/", {"Fn::GetAtt" : ["MasterInstance", "PrivateI"]} ,"/g' /etc/collectd/collectd.conf\n",
-            "sed -i -e 's/{MASTER_PRIVATE_IP}/", {"Fn::GetAtt" : ["MasterInstance", "PrivateI"]} ,"/g' /mnt/data/spark/conf/metrics.properties\n",
+            "sed -i -e 's/{MASTER_PRIVATE_IP}/", {"Fn::GetAtt" : ["MasterInstance", "PrivateIp"]} ,"/g' /etc/collectd/collectd.conf\n",
+            "sed -i -e 's/{MASTER_PRIVATE_IP}/", {"Fn::GetAtt" : ["MasterInstance", "PrivateIp"]} ,"/g' /mnt/data/spark/conf/metrics.properties\n",
 
 
             "service collectd restart\n",
