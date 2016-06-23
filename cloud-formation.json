@@ -744,8 +744,8 @@
 
             "service collectd restart\n",
             "service carbon-cache restart\n",
-            "service grafana-server restart\n",
             "service apache2 restart\n",
+            "service grafana-server restart || true\n",
 
             "apt-get update\n",
             "apt-get -y install python-setuptools awscli\n",
