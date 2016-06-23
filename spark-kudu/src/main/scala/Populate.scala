@@ -109,7 +109,7 @@ class Populate(execCtx: ExecCtx, inputDir: String) {
   }
 
   def importGzToKudu(kuduContext: Broadcast[ExtendedKuduContext], scaleFactor: Int) {
-    val s3Root = "s3n://brent-emr-test/tpch/${scaleFactor}x"
+    val s3Root = s"s3n://brent-emr-test/tpch/${scaleFactor}x"
 
     val customerSchema = StructType(Array(
       StructField("c_custkey", IntegerType, false),
