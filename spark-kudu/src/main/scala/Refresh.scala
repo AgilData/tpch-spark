@@ -93,10 +93,12 @@ object Refresh {
 
       // TODO this is wildly inefficient
       val r = ResultHelper.time() {
-        sqlContext.table("lineitem")
+        val rdd = sqlContext.table("lineitem")
         .where($"l_orderkey" === orderKey)
           .select("l_linenumber")
-          .collect()
+
+        println(s"HERERERE ${rdd.explain(true)}")
+        rdd.collect()
       }
 
       totalLookup += r._1

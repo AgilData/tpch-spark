@@ -190,6 +190,7 @@
                   "make\n",
 
                   "cd /mnt/data/tpch-spark/spark-kudu\n",
+                  "git checkout docker\n",
                   "sudo mkdir -p /root/.m2\n",
                   "sudo ln -s /mnt/data/maven_repository /root/.m2/repository\n",
                   "sudo ln -s /mnt/data/ivy2 /root/.ivy2\n",
@@ -216,6 +217,7 @@
                   "   --scale-factor ", { "Ref" : "ScaleFactor" }, "\n",
                   "   --partitionCount ", { "Ref" : "PartitionCount" },
                   "   --executorMemory ", { "Ref" : "ExecMem" },
+                  "   -r /mnt/data/maven_repository ",
                   "   --mode ingest\"\n",
 
                   "nohup python -m SimpleHTTPServer 80 &\n",
@@ -230,6 +232,7 @@
                   "   -c ", { "Ref" : "ScaleFactor"},
                   "   -u ", { "Ref" : "BenchmarkUsers" },
                   "   -i /mnt/data/tpch-spark/dbgen ",
+                  "   -r /mnt/data/maven_repository ",
                   "   --mode csv\" > log.txt\n"
 
                 ]]}

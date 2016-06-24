@@ -11,8 +11,6 @@ import org.apache.spark.{SparkConf, SparkContext}
 import org.apache.log4j.{Level, Logger}
 import org.ini4j.{Ini, IniPreferences}
 
-case class ExecCtx(sparkCtx: SparkContext, sqlCtx: SQLContext, kuduCtx: Broadcast[ExtendedKuduContext])
-
 /**
   * Created by andy on 5/6/16.
   */
@@ -39,6 +37,7 @@ object Main {
     options.addOption("w", "power", false, "run only the power benchmark")
     options.addOption("t", "throughput", false, "run only the throughput benchmark")
     options.addOption("c", "scale-factor", true, "scale factor of data population")
+    options.addOption("r", "maven-repo", true, "location of maven repository")
 
     val parser = new BasicParser
     val cmd = parser.parse(options, args)
@@ -60,6 +59,8 @@ object Main {
     val EXEC_MEM = cmd.getOptionValue("e", "1g")
     val PARTITION_COUNT = cmd.getOptionValue("p", "20")
     val OUTPUT_DIR = "/tmp"
+    val MAVEN_REPO = cmd.getOptionValue("r", s"${System.getProperty("user.home")}/.m2/repository")
+
     println(s"KUDU_MASTER=$KUDU_MASTER")
     println(s"INPUT_DIR=$INPUT_DIR")
     println(s"SPARK_MASTER=$SPARK_MASTER")
@@ -68,26 +69,8 @@ object Main {
 
     // get the name of the class excluding dollar signs and package
     val className = this.getClass.getName.split("\\.").last.replaceAll("\\$", "")
-    val conf = new SparkConf()
-      .setMaster(SPARK_MASTER)
-      .setAppName("TPC-H " + className)
-      .setExecutorEnv("spark.executor.memory", EXEC_MEM)
-      .setExecutorEnv("spark.sql.tungsten.enabled", "true")
-      .setExecutorEnv("spark.sql.shuffle.partitions", PARTITION_COUNT)
-      .setExecutorEnv("spark.serializer", "org.apache.spark.serializer.KryoSerializer")
-      .set("spark.executor.memory", EXEC_MEM)
-      .set("spark.sql.tungsten.enabled", "true")
-      .set("spark.sql.shuffle.partitions", PARTITION_COUNT)
-      .set("spark.serializer", "org.apache.spark.serializer.KryoSerializer")
-      .set("spark.metrics.conf", "/mnt/data/spark/conf/metrics.properties")
+    val execCtx = SparkHelper.getExecContext(SPARK_MASTER, KUDU_MASTER, EXEC_MEM, PARTITION_COUNT, className, MAVEN_REPO)
 
-    val sparkCtx = new SparkContext(conf)
-    sparkCtx.addJar("/mnt/data/maven_repository/org/kududb/kudu-spark_2.11/1.0.0-SNAPSHOT/kudu-spark_2.11-1.0.0-SNAPSHOT.jar")
-    sparkCtx.addJar("/mnt/data/tpch-spark/spark-kudu/target/scala-2.11/spark-tpc-h-queries_2.11-1.1-SNAPSHOT.jar")
-    sparkCtx.addFile("/mnt/data/spark/conf/metrics.properties")
-    val sqlCtx = new org.apache.spark.sql.SQLContext(sparkCtx)
-    val kuduCtx = sparkCtx.broadcast(new ExtendedKuduContext(KUDU_MASTER))
-    val execCtx = ExecCtx(sparkCtx, sqlCtx, kuduCtx)
 
     val home = new File(System.getProperty("user.home"))
     val creds = new File(home, ".aws/credentials")
@@ -96,8 +79,8 @@ object Main {
       val keyId = prefs.node("default").get("aws_access_key_id", null)
       val accessKey = prefs.node("default").get("aws_secret_access_key", null)
       println(s"------ $keyId")
-      sparkCtx.hadoopConfiguration.set("fs.s3n.awsAccessKeyId", keyId)
-      sparkCtx.hadoopConfiguration.set("fs.s3n.awsSecretAccessKey", accessKey)
+      execCtx.sparkCtx.hadoopConfiguration.set("fs.s3n.awsAccessKeyId", keyId)
+      execCtx.sparkCtx.hadoopConfiguration.set("fs.s3n.awsSecretAccessKey", accessKey)
     }
 
     MODE match {

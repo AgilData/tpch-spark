@@ -8,6 +8,7 @@ function do_help {
   echo "   master              - Start a Kudu Master"
   echo "   tserver             - Start a Kudu TServer"
   echo "   test                - Run the test"
+  echo "   populate            - Populate with tpch data"
   echo "   cli                 - Start a Kudu CLI"
   echo "   help                - print useful information and exit"
   echo ""
@@ -34,9 +35,21 @@ elif [ "$1" = 'tserver' ]; then
   ./bin/spark-class org.apache.spark.deploy.worker.Worker spark://${KUDU_MASTER}:7077 &
   cd /kudu/build/release
   exec bin/kudu-tserver -fs_wal_dir=/var/lib/kudu/tserver -tserver_master_addrs ${KUDU_MASTER} ${KUDU_OPTS}
-elif [ "$1" = 'test' ]; then
+elif [ "$1" = 'populate' ]; then
+  cd /dbgen
+  ./dbgen -qf -s 1
   cd /spark-kudu
-  sbt "run -DkuduMaster=${KUDU_MASTER} populate"
+  sbt "run --kuduMaster ${KUDU_MASTER}:7051 \
+     --sparkMaster local[*] \
+     --inputDir /dbgen/ \
+     --partitionCount 20 \
+     --executorMemory 1g \
+     -r /root/.m2/repository \
+     --mode populate"
+elif [ "$1" = 'test' ]; then
+  echo "Test not supported!"
+  exit 1
+
 elif [ "$1" = 'cli' ]; then
   shift; # Remove first arg and pass remainder to kudu cli
   cd /kudu/build/release
