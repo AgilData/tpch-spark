@@ -5,6 +5,8 @@ TSERVERS=1
 DOCKER_NET="host"
 DOCKER_HOST_IP="127.0.0.1"
 
+./docker_teardown.sh
+
 if [ "$platform" == 'Darwin' ]; then
   if docker network ls | grep kudu > /dev/null ; then
     echo 'Docker network kudu already exists. Not creating it.'
