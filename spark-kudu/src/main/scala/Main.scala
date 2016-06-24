@@ -59,7 +59,7 @@ object Main {
     val EXEC_MEM = cmd.getOptionValue("e", "1g")
     val PARTITION_COUNT = cmd.getOptionValue("p", "20")
     val OUTPUT_DIR = "/tmp"
-    val MAVEN_REPO = cmd.getOptionValue("r", "/mnt/data/maven_repository")
+    val MAVEN_REPO = cmd.getOptionValue("r", s"${System.getProperty("user.home")}/.m2/repository")
 
     println(s"KUDU_MASTER=$KUDU_MASTER")
     println(s"INPUT_DIR=$INPUT_DIR")
@@ -71,13 +71,6 @@ object Main {
     val className = this.getClass.getName.split("\\.").last.replaceAll("\\$", "")
     val execCtx = SparkHelper.getExecContext(SPARK_MASTER, KUDU_MASTER, EXEC_MEM, PARTITION_COUNT, className, MAVEN_REPO)
 
-//    val sparkCtx = new SparkContext(conf)
-//    sparkCtx.addJar(s"$MAVEN_REPO/org/kududb/kudu-spark_2.11/1.0.0-SNAPSHOT/kudu-spark_2.11-1.0.0-SNAPSHOT.jar")
-//    sparkCtx.addJar(s"${new File(".").getCanonicalPath}/target/scala-2.11/spark-tpc-h-queries_2.11-1.1-SNAPSHOT.jar")
-//    //sparkCtx.addFile("/mnt/data/spark/conf/metrics.properties")
-//    val sqlCtx = new org.apache.spark.sql.SQLContext(sparkCtx)
-//    val kuduCtx = sparkCtx.broadcast(new ExtendedKuduContext(KUDU_MASTER))
-//    val execCtx = ExecCtx(sparkCtx, sqlCtx, kuduCtx)
 
     val home = new File(System.getProperty("user.home"))
     val creds = new File(home, ".aws/credentials")
