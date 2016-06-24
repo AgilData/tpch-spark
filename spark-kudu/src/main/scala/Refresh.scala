@@ -97,7 +97,8 @@ object Refresh {
         .where($"l_orderkey" === orderKey)
           .select("l_linenumber")
 
-        println(s"HERERERE ${rdd.explain(true)}")
+        //rdd.explain(true)
+
         rdd.collect()
       }
 
