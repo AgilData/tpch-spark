@@ -30,7 +30,7 @@ done
 
 ./run-populate.sh $DOCKER_NET
 
-entry="$DOCKER_HOST_IP   kudu-docker kudu-master $workers"
+entry="$DOCKER_HOST_IP   kudu-master $workers"
 # sudo sed -n '/kudu-master/!p' /etc/hosts > ./o
 # sudo mv ./o /etc/hosts
 # sudo echo "$entry" | sudo tee -a /etc/hosts
