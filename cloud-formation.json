@@ -216,6 +216,7 @@
                   "   --inputDir /mnt/data/tpch-spark/dbgen/ ",
                   "   --partitionCount ", { "Ref" : "PartitionCount" },
                   "   --executorMemory ", { "Ref" : "ExecMem" },
+                  "   -r /mnt/data/maven_repository ",
                   "   --mode populate\"\n",
 
                   "nohup python -m SimpleHTTPServer 80 &\n",
@@ -230,6 +231,7 @@
                   "   -c ", { "Ref" : "ScaleFactor"},
                   "   -u ", { "Ref" : "BenchmarkUsers" },
                   "   -i /mnt/data/tpch-spark/dbgen ",
+                  "   -r /mnt/data/maven_repository ",
                   "   --mode csv\" > log.txt\n"
 
                 ]]}

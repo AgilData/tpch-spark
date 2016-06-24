@@ -1,6 +1,6 @@
 platform=`uname`
 
-TSERVERS=1
+TSERVERS=2
 
 DOCKER_NET="host"
 DOCKER_HOST_IP="127.0.0.1"
@@ -30,6 +30,10 @@ done
 
 ./run-populate.sh $DOCKER_NET
 
-echo "ADD this entry to your /etc/hosts directory to connect from your local host"
 entry="$DOCKER_HOST_IP   kudu-docker kudu-master $workers"
-echo $entry
+
+sudo sed -n '/kudu-master/!p' /etc/hosts > ./o
+sudo mv ./o /etc/hosts
+sudo echo "$entry" | sudo tee -a /etc/hosts
+
+# echo "ADD this entry to your /etc/hosts directory to connect from your local host"

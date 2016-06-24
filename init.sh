@@ -47,16 +47,8 @@ elif [ "$1" = 'populate' ]; then
      -r /root/.m2/repository \
      --mode populate"
 elif [ "$1" = 'test' ]; then
+  echo "Test not supported!"
   exit 1
-  # cd /spark-kudu
-  # sbt "run --kuduMaster ${KUDU_MASTER}:7051 \
-  #    --sparkMaster local[*] \
-  #    --inputDir /dbgen/ \
-  #    --partitionCount 20 \
-  #    --executorMemory 1g \
-  #    -r /.m2 \
-  #    -d / \
-  #    --mode populate"
 
 elif [ "$1" = 'cli' ]; then
   shift; # Remove first arg and pass remainder to kudu cli
