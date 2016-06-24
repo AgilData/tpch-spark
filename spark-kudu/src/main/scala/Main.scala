@@ -39,6 +39,7 @@ object Main {
     options.addOption("w", "power", false, "run only the power benchmark")
     options.addOption("t", "throughput", false, "run only the throughput benchmark")
     options.addOption("c", "scale-factor", true, "scale factor of data population")
+    options.addOption("r", "maven-repo", true, "location of maven repository")
 
     val parser = new BasicParser
     val cmd = parser.parse(options, args)
@@ -60,6 +61,8 @@ object Main {
     val EXEC_MEM = cmd.getOptionValue("e", "1g")
     val PARTITION_COUNT = cmd.getOptionValue("p", "20")
     val OUTPUT_DIR = "/tmp"
+    val MAVEN_REPO = cmd.getOptionValue("r", "/mnt/data/maven_repository")
+
     println(s"KUDU_MASTER=$KUDU_MASTER")
     println(s"INPUT_DIR=$INPUT_DIR")
     println(s"SPARK_MASTER=$SPARK_MASTER")
@@ -79,12 +82,12 @@ object Main {
       .set("spark.sql.tungsten.enabled", "true")
       .set("spark.sql.shuffle.partitions", PARTITION_COUNT)
       .set("spark.serializer", "org.apache.spark.serializer.KryoSerializer")
-      .set("spark.metrics.conf", "/mnt/data/spark/conf/metrics.properties")
+      //.set("spark.metrics.conf", "/mnt/data/spark/conf/metrics.properties")
 
     val sparkCtx = new SparkContext(conf)
-    sparkCtx.addJar("/mnt/data/maven_repository/org/kududb/kudu-spark_2.11/1.0.0-SNAPSHOT/kudu-spark_2.11-1.0.0-SNAPSHOT.jar")
-    sparkCtx.addJar("/mnt/data/tpch-spark/spark-kudu/target/scala-2.11/spark-tpc-h-queries_2.11-1.1-SNAPSHOT.jar")
-    sparkCtx.addFile("/mnt/data/spark/conf/metrics.properties")
+    sparkCtx.addJar(s"$MAVEN_REPO/org/kududb/kudu-spark_2.11/1.0.0-SNAPSHOT/kudu-spark_2.11-1.0.0-SNAPSHOT.jar")
+    sparkCtx.addJar(s"${new File(".").getCanonicalPath}/target/scala-2.11/spark-tpc-h-queries_2.11-1.1-SNAPSHOT.jar")
+    //sparkCtx.addFile("/mnt/data/spark/conf/metrics.properties")
     val sqlCtx = new org.apache.spark.sql.SQLContext(sparkCtx)
     val kuduCtx = sparkCtx.broadcast(new ExtendedKuduContext(KUDU_MASTER))
     val execCtx = ExecCtx(sparkCtx, sqlCtx, kuduCtx)
