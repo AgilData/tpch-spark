@@ -220,6 +220,10 @@
                   "   -r /mnt/data/maven_repository ",
                   "   --mode ingest\"\n",
 
+                  "apt-get install jq\n",
+                  "aws ec2 describe-instances | jq \"[.Reservations[].Instances[] | select(.Tags[].Value == \\\"TServer $STACK_NAME\\\").PrivateDnsName]\" > charts/tablet-ips.json\n",
+                  "cp ~/.aws/credentials ~/.aws/config\n",
+                  "echo 'region = us-east-1' >> ~/.aws/config\n",
                   "nohup python -m SimpleHTTPServer 8011 &\n",
 
                   "mkdir -p /mnt/data/spark_data\n",
@@ -259,7 +263,8 @@
               "test" : {
                 "command" : "sh /root/start-runner.sh",
                 "env" : {
-                  "ZOOKEEPER_ADDRESS": {"Fn::GetAtt" : ["MasterInstance", "PublicIp"]}
+                  "ZOOKEEPER_ADDRESS": {"Fn::GetAtt" : ["MasterInstance", "PublicIp"]},
+                  "STACK_NAME": { "Ref" : "AWS::StackName" }
                 },
                 "cwd" : "~"
               }
