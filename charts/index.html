@@ -10,6 +10,8 @@
 		  url: "tablet-ips.json"
 		}).done(function(data) {
 			console.log(data);
+			MASTER_IP = data.masterIp;
+			data = data.tablets;
 			setInterval(function() {
 				$('#imgCpu').attr('src', buildUrl(["cpu-0.cpu-user"], data));
 				$('#imgMem').attr('src', buildUrl(["memory.memory-used"], data));

@@ -12,8 +12,6 @@ done
 
 MASTER_IP=$(aws cloudformation describe-stacks --stack-name $UUID | jq '.Stacks[0].Outputs[] | select(.OutputKey == "MasterIP").OutputValue' | egrep -o "[0-9\.]*")
 
-aws ec2 describe-instances | jq "[.Reservations[].Instances[] | select(.Tags[].Value == \"TServer $UUID\").PrivateDnsName]" > tablet-ips.json
-
 echo "Spark Master http://$MASTER_IP:8080/"
 echo "Kudu Master http://$MASTER_IP:8051/"
 echo "Graphite URL http://$MASTER_IP/"
