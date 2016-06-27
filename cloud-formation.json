@@ -190,7 +190,7 @@
                   "make\n",
 
                   "cd /mnt/data/tpch-spark/spark-kudu\n",
-                  "git checkout docker\n",
+                  "git checkout master\n",
                   "sudo mkdir -p /root/.m2\n",
                   "sudo ln -s /mnt/data/maven_repository /root/.m2/repository\n",
                   "sudo ln -s /mnt/data/ivy2 /root/.ivy2\n",
@@ -220,7 +220,13 @@
                   "   -r /mnt/data/maven_repository ",
                   "   --mode ingest\"\n",
 
-                  "nohup python -m SimpleHTTPServer 80 &\n",
+                  "cp /root/.aws/credentials /root/.aws/config\n",
+                  "echo 'region = us-east-1' >> /root/.aws/config\n",
+                  "apt-get install jq\n",
+                  "echo \"{\\\"masterIp\\\": \\\"$ZOOKEEPER_ADDRESS\\\", \\\"tablets\\\" : \" >> charts/tablet-ips.json\n",
+                  "aws ec2 describe-instances | jq \"[.Reservations[].Instances[] | select(.Tags[].Value == \\\"TServer $STACK_NAME\\\").PrivateDnsName]\" >> charts/tablet-ips.json\n",
+                  "echo \"}\"\n",
+                  "nohup python -m SimpleHTTPServer 8011 &\n",
 
                   "mkdir -p /mnt/data/spark_data\n",
                   "export SPARK_LOCAL_DIRS=/mnt/data/spark_data\n",
@@ -259,7 +265,8 @@
               "test" : {
                 "command" : "sh /root/start-runner.sh",
                 "env" : {
-                  "ZOOKEEPER_ADDRESS": {"Fn::GetAtt" : ["MasterInstance", "PublicIp"]}
+                  "ZOOKEEPER_ADDRESS": {"Fn::GetAtt" : ["MasterInstance", "PublicIp"]},
+                  "STACK_NAME": { "Ref" : "AWS::StackName" }
                 },
                 "cwd" : "~"
               }
