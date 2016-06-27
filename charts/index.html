@@ -15,8 +15,8 @@
 			setInterval(function() {
 				$('#imgCpu').attr('src', buildUrl(["cpu-0.cpu-user"], data));
 				$('#imgMem').attr('src', buildUrl(["memory.memory-used"], data));
-				$('#imgRead').attr('src', buildUrl(["disk-xvda.disk_octets.read","disk-xvdb.disk_octets.read","disk-xvdc.disk_octets.read"], data));
-				$('#imgWrite').attr('src', buildUrl(["disk-xvda.disk_octets.write","disk-xvdb.disk_octets.write","disk-xvdc.disk_octets.write"], data));
+				$('#imgRead').attr('src', buildUrl(["disk-xvdb.disk_octets.read","disk-xvdc.disk_octets.read"], data));
+				$('#imgWrite').attr('src', buildUrl(["disk-xvdb.disk_octets.write","disk-xvdc.disk_octets.write"], data));
 				$('#imgSnd').attr('src', buildUrl(["interface-eth0.if_octets.rx"], data));
 				$('#imgRcv').attr('src', buildUrl(["interface-eth0.if_octets.tx"], data));
 			}, 3000);
