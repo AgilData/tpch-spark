@@ -220,7 +220,7 @@
                   "   -r /mnt/data/maven_repository ",
                   "   --mode ingest\"\n",
 
-                  "nohup python -m SimpleHTTPServer 80 &\n",
+                  "nohup python -m SimpleHTTPServer 8011 &\n",
 
                   "mkdir -p /mnt/data/spark_data\n",
                   "export SPARK_LOCAL_DIRS=/mnt/data/spark_data\n",
