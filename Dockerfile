@@ -59,6 +59,10 @@ RUN cd /kudu/java/kudu-spark && \
 	cd /kudu/java/ && \
 	mvn install -DskipTests
 
+RUN cd / && \
+	wget http://download.ej-technologies.com/jprofiler/jprofiler_linux_9_2.tar.gz && \
+	tar xvzf jprofiler_linux_9_2.tar.gz
+
 # -------------------------------- Spark-Kudu ---------------------------------
 # mkdir -p tpc-h
 # cd tpc-h
@@ -78,4 +82,4 @@ ENV KUDU_HOME /kudu/
 RUN apt-get -y install net-tools iputils-ping telnet
 COPY init.sh /
 #ENTRYPOINT ["/init.sh"]
-EXPOSE 7051 8050 8051 7077 8080 6066 7050 4040
+EXPOSE 7051 8050 8051 7077 8080 6066 7050 4040 11002

@@ -5,7 +5,7 @@ import java.io.{File, PrintWriter}
 import scala.collection.mutable.ListBuffer
 import scala.math.BigDecimal.RoundingMode
 
-class Result(concurrency: Int, sf: Int) {
+case class Result(concurrency: Int, sf: Int) {
 
   val power : scala.collection.mutable.Map[Int, Long] = scala.collection.mutable.Map()
   val powerRF : scala.collection.mutable.Map[String, Long] = scala.collection.mutable.Map()

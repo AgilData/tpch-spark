@@ -6,6 +6,7 @@ import java.util.Random
 import org.kududb.client.SessionConfiguration
 import org.apache.spark.sql.{DataFrame, SQLContext}
 import org.apache.spark.sql.functions._
+import org.kududb.client
 import org.kududb.spark.kudu._
 
 import scala.collection.mutable.ListBuffer
@@ -60,7 +61,7 @@ object Refresh {
 
   }
 
-  def executeRF2(dir: String, set: Int, execCtx: ExecCtx): Unit = {
+  def executeRF2(dir: String, set: Int, execCtx: ExecCtx, sf: Int): Unit = {
     println("Executing RF2...")
 
     val sc = execCtx.sparkCtx
@@ -91,22 +92,47 @@ object Refresh {
       totalODelete += ResultHelper.time() {kuduContext.delete(Seq(orderKey), Seq("o_orderkey"),"order", session)}._1
       oDeletes += 1
 
-      // TODO this is wildly inefficient
+      val lineItemKeys: ListBuffer[(Int,Int)] = new ListBuffer()
+
+      // Workaround to query kudu direct and get a range pk scan
       val r = ResultHelper.time() {
-        val rdd = sqlContext.table("lineitem")
-        .where($"l_orderkey" === orderKey)
-          .select("l_linenumber")
+        val c = execCtx.kuduCtx.value.syncClient
+        val t = c.openTable("lineitem")
+        val b = c.newScannerBuilder(t)
+        val p = new client.PartialRow(t.getSchema)
+        p.addInt("l_orderkey", orderKey)
+        p.addInt("l_linenumber", 1)
+        b.lowerBound(p)
 
-        //rdd.explain(true)
+        val e = new client.PartialRow(t.getSchema)
+        e.addInt("l_orderkey", orderKey)
+        // TODO not totally correct as new rows are added as part of RF1
+        e.addInt("l_linenumber", 6001215*sf)
+        b.exclusiveUpperBound(e)
 
-        rdd.collect()
+        import scala.collection.JavaConverters._
+        b.setProjectedColumnNames(List("l_orderkey", "l_linenumber").asJava)
+        val s = b.build()
+        while (s.hasMoreRows) {
+          val result = s.nextRows()
+          while (result.hasNext) {
+            val t = result.next()
+            lineItemKeys += ((t.getInt(0), t.getInt(1)))
+          }
+        }
+        // TODO this spark job does a full table scan rather than a pkey range scan
+//        val rdd = sqlContext.table("lineitem")
+//        .where($"l_orderkey" === orderKey)
+//          .select("l_linenumber")
+//        //rdd.explain(true)
+//        rdd.collect()
       }
 
       totalLookup += r._1
       val rows = r._2
 
-      rows.foreach(f => {
-        totalLDelete += ResultHelper.time() { kuduContext.delete(Seq(orderKey, f.getInt(0)), Seq("l_orderkey", "l_linenumber"),"lineitem", session)}._1
+      lineItemKeys.foreach(f => {
+        totalLDelete += ResultHelper.time() { kuduContext.delete(Seq(f._1, f._2), Seq("l_orderkey", "l_linenumber"),"lineitem", session)}._1
         lDeletes +=1
       })
 
@@ -116,7 +142,7 @@ object Refresh {
 
     println(s"RF2 completes $oDeletes order and $lDeletes lineitem deletes!")
     println(s"RF2 completes avg order delete time: ${totalODelete.toDouble/oDeletes}ms")
-    println(s"RF2 completes avg lineitem delete time: ${totalLDelete.toDouble/oDeletes}ms")
+    println(s"RF2 completes avg lineitem delete time: ${totalLDelete.toDouble/lDeletes}ms")
     println(s"RF2 completes avg lookup time: ${totalLookup.toDouble/oDeletes}ms")
     println(s"RF2 completes avg flush time: ${totalFlush.toDouble/oDeletes}ms")
 

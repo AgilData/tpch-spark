@@ -7,6 +7,7 @@ docker run \
 -p 7050:7050 \
 -p 8050:8050 \
 -p 8081:8081 \
+-p 11002:11002 \
 -e KUDU_MASTER=kudu-master \
 -d \
 --entrypoint "/init.sh" \

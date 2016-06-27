@@ -64,7 +64,7 @@ class TpchQuery(execCtx: ExecCtx, result: Result, dbGenInputDir: String) {
         }
 
         ResultHelper.timeAndRecord(result, 2, ResultHelper.Mode.ThroughputRF, i) {
-          Refresh.executeRF2(dbGenInputDir, i, execCtx)
+          Refresh.executeRF2(dbGenInputDir, i, execCtx, result.sf)
         }
 
       } catch {
@@ -131,7 +131,7 @@ class TpchQuery(execCtx: ExecCtx, result: Result, dbGenInputDir: String) {
     }
 
     if (mode == ResultHelper.Mode.Power) {
-      ResultHelper.timeAndRecord(result, 2, ResultHelper.Mode.PowerRF) { Refresh.executeRF2(dbGenInputDir, threadNo + 1, execCtx) }
+      ResultHelper.timeAndRecord(result, 2, ResultHelper.Mode.PowerRF) { Refresh.executeRF2(dbGenInputDir, threadNo + 1, execCtx, result.sf) }
     }
   }
 

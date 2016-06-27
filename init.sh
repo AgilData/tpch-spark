@@ -32,9 +32,10 @@ if [ "$1" = 'master' ]; then
 	exec bin/kudu-master -fs_wal_dir=/var/lib/kudu/master ${KUDU_OPTS}
 elif [ "$1" = 'tserver' ]; then
   cd /spark
-  ./bin/spark-class org.apache.spark.deploy.worker.Worker spark://${KUDU_MASTER}:7077 &
+  /jdk1.8.0_91/jre/bin/java -cp /spark/conf/:/spark/assembly/target/scala-2.11/jars/* -Xmx1g -agentpath:/jprofiler9/bin/linux-x64/libjprofilerti.so=port=11002,nowait org.apache.spark.deploy.worker.Worker spark://kudu-master:7077 &
   cd /kudu/build/release
   exec bin/kudu-tserver -fs_wal_dir=/var/lib/kudu/tserver -tserver_master_addrs ${KUDU_MASTER} ${KUDU_OPTS}
+
 elif [ "$1" = 'populate' ]; then
   cd /dbgen
   ./dbgen -qf -s 1
