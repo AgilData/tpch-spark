@@ -14,7 +14,7 @@ DRIVER_IP=$(aws cloudformation describe-stacks --stack-name $UUID | jq '.Stacks[
 
 echo "Spark Master http://$DRIVER_IP:8080/"
 echo "Kudu Master http://$DRIVER_IP:8051/"
-echo "Graphite URL http://$URL/"
-echo "Grafana URL http://$URL:3000/login"
+echo "Graphite URL http://$DRIVER_IP/"
+echo "Grafana URL http://$DRIVER_IP:3000/login"
 echo "Spark Driver http://$URL:4040/"
 echo "Logs http://$URL/log.txt"
