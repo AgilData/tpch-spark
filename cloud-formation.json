@@ -212,7 +212,7 @@
                   "apt-get install -y jq\n",
                   "echo \"{\\\"masterIp\\\": \\\"$ZOOKEEPER_ADDRESS\\\", \\\"tablets\\\" : \" >> charts/tablet-ips.json\n",
                   "aws ec2 describe-instances | jq \"[.Reservations[].Instances[] | select(.Tags[].Value == \\\"TServer $STACK_NAME\\\").PrivateDnsName]\" >> charts/tablet-ips.json\n",
-                  "echo \"}\"\n",
+                  "echo \"}\" >> charts/tablet-ips.json\n",
                   "nohup python -m SimpleHTTPServer 8011 &\n",
 
                   "echo ZOOKEEPER_ADDRESS=$ZOOKEEPER_ADDRESS\n",
