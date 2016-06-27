@@ -7,19 +7,19 @@
                 $.ajax({
                   url: "tablet-ips.json"
                 }).done(function(data) {
+					console.log(data);
 					setInterval(function() {
+						var url = "http://54.237.32.187/render/";
+						url += "?width=586";
+						url += "&height=308";
+						url += "&_salt=" + Math.random();
+						url += "&from=-1h";
                         for(var i = 0; i < data.length; i++) {
-                                var dns = data[i].replace(/\./g, "_");
-                                var text = "http://54.237.32.187/render/";
-                                text += "?width=586";
-                                text += "&height=308";
-                                text += "&_salt=" + Math.random();
-                                text += "&target=collectd." + dns + ".cpu-0.cpu-user";
-                                text += "&from=-1h";
-                                $('#imgCpu').attr('src', text);
-                                console.log(data);
+							var dns = data[i].replace(/\./g, "_");
+							url += "&target=collectd." + dns + ".cpu-0.cpu-user";
                         }
-					}, 1000);
+						$('#imgCpu').attr('src', url);
+					}, 3000);
                 });
         }
         </script>
