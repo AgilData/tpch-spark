@@ -3,33 +3,46 @@
 	<title>Charts</title>
 	<script type="text/javascript" src="https://code.jquery.com/jquery-3.0.0.min.js"></script>
 	<script type="text/javascript">
+	var MASTER_IP = "54.237.32.187";
+		
 	function init() {
 		$.ajax({
 		  url: "tablet-ips.json"
 		}).done(function(data) {
 			console.log(data);
 			setInterval(function() {
-				$('#imgCpu').attr('src', buildUrl("cpu-0.cpu-user", data));
-				$('#imgMem').attr('src', buildUrl("memory.memory-used", data));
+				$('#imgCpu').attr('src', buildUrl(["cpu-0.cpu-user"], data));
+				$('#imgMem').attr('src', buildUrl(["memory.memory-used"], data));
+				$('#imgRead').attr('src', buildUrl(["disk-xvda.disk_octets.read","disk-xvdb.disk_octets.read","disk-xvdc.disk_octets.read"], data));
+				$('#imgWrite').attr('src', buildUrl(["disk-xvda.disk_octets.write","disk-xvdb.disk_octets.write","disk-xvdc.disk_octets.write"], data));
+				$('#imgSnd').attr('src', buildUrl(["interface-eth0.if_octets.rx"], data));
+				$('#imgRcv').attr('src', buildUrl(["interface-eth0.if_octets.tx"], data));
 			}, 3000);
 		});
 	}
 	
-	function buildUrl(metric, data) {
-		var url = "http://54.237.32.187/render/";
+	function buildUrl(metrics, data) {
+		var url = "http://" + MASTER_IP + "/render/";
 		url += "?width=586";
 		url += "&height=308";
 		url += "&_salt=" + Math.random();
 		url += "&from=-1h";
 		for(var i = 0; i < data.length; i++) {
-			var dns = data[i].replace(/\./g, "_");
-			url += "&target=collectd." + dns + "." + metric;
+			for(var j = 0; j < metrics.length; j++) {
+				var metric = metrics[j];
+				var dns = data[i].replace(/\./g, "_");
+				url += "&target=collectd." + dns + "." + metric;
+			}
 		}
 		return url;
 	}
 	</script>
 </head>
 <body onload="init()">
-        <img id="imgCpu" />
-        <img id="imgMem" />
+        <img id="imgCpu" alt="cpu" style="position: absolute; top: 0; left: 0; right: 50%; bottom: 33%;" />
+        <img id="imgMem" alt="mem" style="position: absolute; top: 0; left: 50%; right: 0; bottom: 33%;" />
+        <img id="imgRead" alt="read" style="position: absolute; top: 33%; left: 0%; right: 0; bottom: 66%;" />
+        <img id="imgWrite" alt="write" style="position: absolute; top: 33%; left: 50%; right: 0; bottom: 66%;" />
+        <img id="imgSnd" alt="read" style="position: absolute; top: 66%; left: 0%; right: 0; bottom: 100%;" />
+        <img id="imgRcv" alt="write" style="position: absolute; top: 66%; left: 50%; right: 0; bottom: 100%;" />
 </body>
