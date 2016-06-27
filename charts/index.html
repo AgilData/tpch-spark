@@ -7,6 +7,7 @@
                 $.ajax({
                   url: "tablet-ips.json"
                 }).done(function(data) {
+					setInterval(function() {
                         for(var i = 0; i < data.length; i++) {
                                 var dns = data[i].replace(/\./g, "_");
                                 var text = "http://54.237.32.187/render/";
@@ -18,6 +19,7 @@
                                 $('#imgCpu').attr('src', text);
                                 console.log(data);
                         }
+					}, 1000);
                 });
         }
         </script>
