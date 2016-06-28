@@ -60,6 +60,12 @@
       "Type": "Number"
     },
 
+    "KuduPartitionCount": {
+      "Default": "20",
+      "Description" : "Partition count in Kudu",
+      "Type": "Number"
+    },
+
     "BenchmarkUsers": {
       "Default": "8",
       "Description" : "Number of concurrent users for TestRunner",
@@ -230,6 +236,7 @@
                   "   --sparkMaster spark://$ZOOKEEPER_ADDRESS:7077 ",
                   "   --scale-factor ", { "Ref" : "ScaleFactor" }, "\n",
                   "   --partitionCount ", { "Ref" : "PartitionCount" },
+                  "   -d ", { "Ref" : "KuduPartitionCount"},
                   "   --executorMemory ", { "Ref" : "ExecMem" },
                   "   -r /mnt/data/maven_repository ",
                   "   --mode ingest\"\n",

@@ -34,6 +34,7 @@ object Main {
     options.addOption("e", "executorMemory", true, "spark.executor.memory")
     options.addOption("u", "users", true, s"Number of concurrent users for benchmark, default is ${concurrency}")
     options.addOption("p", "partitionCount", true, "spark.sql.shuffle.partitions")
+    options.addOption("d", "kuduPartitionCount", true, "Kudu partition count")
     options.addOption("w", "power", false, "run only the power benchmark")
     options.addOption("t", "throughput", false, "run only the throughput benchmark")
     options.addOption("c", "scale-factor", true, "scale factor of data population")
@@ -58,6 +59,7 @@ object Main {
     val MODE = cmd.getOptionValue("m")
     val EXEC_MEM = cmd.getOptionValue("e", "1g")
     val PARTITION_COUNT = cmd.getOptionValue("p", "20")
+    val KUDU_PARTITION_COUNT = Integer.parseInt(cmd.getOptionValue("d", "20"))
     val OUTPUT_DIR = "/tmp"
     val MAVEN_REPO = cmd.getOptionValue("r", s"${System.getProperty("user.home")}/.m2/repository")
 
@@ -66,6 +68,7 @@ object Main {
     println(s"SPARK_MASTER=$SPARK_MASTER")
     println(s"EXEC_MEM=$EXEC_MEM")
     println(s"PARTITION_COUNT=$PARTITION_COUNT")
+    println(s"KUDU_PARTITION_COUNT=$KUDU_PARTITION_COUNT")
 
     // get the name of the class excluding dollar signs and package
     val className = this.getClass.getName.split("\\.").last.replaceAll("\\$", "")
@@ -85,14 +88,14 @@ object Main {
 
     MODE match {
       case "populate" =>
-        new Populate(execCtx, INPUT_DIR).executeImport()
+        new Populate(execCtx, INPUT_DIR, KUDU_PARTITION_COUNT).executeImport()
       case "ingest" => {
         val scaleFactor = Integer.parseInt(cmd.getOptionValue("c"))
-        new Populate(execCtx, INPUT_DIR).executeIngest(scaleFactor)
+        new Populate(execCtx, INPUT_DIR, KUDU_PARTITION_COUNT).executeIngest(scaleFactor)
       }
       case "split" => {
         val scaleFactor = Integer.parseInt(cmd.getOptionValue("c"))
-        new Populate(execCtx, INPUT_DIR).splitCsv(scaleFactor)
+        new Populate(execCtx, INPUT_DIR, KUDU_PARTITION_COUNT).splitCsv(scaleFactor)
       }
       case "sql" =>
         RunQueries.execute(execCtx, cmd.getOptionValue("q"))

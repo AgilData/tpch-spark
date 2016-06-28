@@ -7,7 +7,7 @@ import org.kududb.client._
 
 import scala.collection.JavaConverters._
 
-class Populate(execCtx: ExecCtx, inputDir: String) {
+class Populate(execCtx: ExecCtx, inputDir: String, partitionCount: Int) {
 
   val sc = execCtx.sparkCtx
   val sqlContext = execCtx.sqlCtx
@@ -227,8 +227,8 @@ class Populate(execCtx: ExecCtx, inputDir: String) {
       kc.deleteTable(tableName)
     }
     val tableOptions = new CreateTableOptions()
-      .setRangePartitionColumns(pk.asJava)
-      .setNumReplicas(1) // TODO: Parameterize
+      .addHashPartitions(pk.asJava, partitionCount) // TODO: Range partitions
+      .setNumReplicas(1)
     kc.createTable(tableName, df.schema, pk, tableOptions)
     kc.save(df, tableName)
   }
