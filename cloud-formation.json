@@ -234,11 +234,8 @@
                   "   -r /mnt/data/maven_repository ",
                   "   --mode ingest\"\n",
                   
-                  "if [[ \"$POWER_ONLY\" == \"true\" ]]; then\n",
-				  "	export POWER=\"-w\"\n",
-				  "else\n",
-				  "	export POWER=\"\"\n",
-				  "fi\n",
+				  "export POWER=\"\"\n",
+                  "if \"$POWER_ONLY\" == \"true\" ; then export POWER=\"-w\" ; fi \n",
 
                   "mkdir -p /mnt/data/spark_data\n",
                   "export SPARK_LOCAL_DIRS=/mnt/data/spark_data\n",
