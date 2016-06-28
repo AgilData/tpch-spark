@@ -79,6 +79,12 @@
       "Type": "Number"
     },
 
+    "PowerOnly" : {
+      "Default": "true",
+      "Description" : "Run only the power query",
+      "Type": "String"
+    },
+
     "SSHLocation" : {
       "Description" : " The IP address range that can be used to SSH to the EC2 instances",
       "Type": "String",
@@ -227,6 +233,12 @@
                   "   --executorMemory ", { "Ref" : "ExecMem" },
                   "   -r /mnt/data/maven_repository ",
                   "   --mode ingest\"\n",
+                  
+                  "if [[ \"$POWER_ONLY\" == \"true\" ]]; then\n",
+				  "	export POWER=\"-w\"\n",
+				  "else\n",
+				  "	export POWER=\"\"\n",
+				  "fi\n",
 
                   "mkdir -p /mnt/data/spark_data\n",
                   "export SPARK_LOCAL_DIRS=/mnt/data/spark_data\n",
@@ -239,6 +251,7 @@
                   "   -u ", { "Ref" : "BenchmarkUsers" },
                   "   -i /mnt/data/tpch-spark/dbgen ",
                   "   -r /mnt/data/maven_repository ",
+                  "   $POWER ",
                   "   --mode csv\" > log.txt\n"
 
                 ]]}
@@ -267,6 +280,7 @@
                 "env" : {
                   "ZOOKEEPER_ADDRESS": {"Fn::GetAtt" : ["MasterInstance", "PublicIp"]},
                   "STACK_NAME": { "Ref" : "AWS::StackName" }
+                  "POWER_ONLY": { "Ref" : "PowerOnly"}
                 },
                 "cwd" : "~"
               }
