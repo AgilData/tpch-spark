@@ -13,7 +13,7 @@
 			MASTER_IP = data.masterIp;
 			data = data.tablets;
 			setInterval(function() {
-				$('#imgCpu').attr('src', buildUrl(["cpu-0.cpu-user"], data));
+				$('#imgCpu').attr('src', buildUrl(["cpu-*.cpu-user"], data, true));
 				$('#imgMem').attr('src', buildUrl(["memory.memory-used"], data));
 				$('#imgRead').attr('src', buildUrl(["disk-xvdb.disk_octets.read","disk-xvdc.disk_octets.read"], data));
 				$('#imgWrite').attr('src', buildUrl(["disk-xvdb.disk_octets.write","disk-xvdc.disk_octets.write"], data));
@@ -23,7 +23,7 @@
 		});
 	}
 	
-	function buildUrl(metrics, data) {
+	function buildUrl(metrics, data, sum) {
 		var url = "http://" + MASTER_IP + "/render/";
 		url += "?width=586";
 		url += "&height=308";
@@ -33,7 +33,12 @@
 			for(var j = 0; j < metrics.length; j++) {
 				var metric = metrics[j];
 				var dns = data[i].replace(/\./g, "_");
-				url += "&target=collectd." + dns + "." + metric;
+				url += "&target=";
+				if(sum)
+					url += "sumSeries(";
+				url += "collectd." + dns + "." + metric;
+				if(sum)
+					url += ")";
 			}
 		}
 		return url;
