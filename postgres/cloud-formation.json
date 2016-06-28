@@ -1,7 +1,7 @@
 {
   "AWSTemplateFormatVersion" : "2010-09-09",
 
-  "Description" : "Spark on Kudu TCP-H query performance test",
+  "Description" : "PostGreSQL query performance test",
 
   "Parameters" : {
 
@@ -173,17 +173,6 @@
                   "exec 1>log.out 2>&1\n",
 
                   "export PATH=/opt/jdk1.8.0_91/bin/:/opt/apache-maven-3.3.9/bin/:$PATH\n",
-                  "mkdir -p /mnt/data/kudu_data\n",
-                  "chmod ugo+rw /mnt/data/kudu_data\n",
-                  "ln -s /mnt/data/kudu_data /var/lib/kudu\n",
-
-                  "cd /mnt/data/spark\n",
-                  "mkdir -p /mnt/data/spark_data\n",
-                  "export SPARK_LOCAL_DIRS=/mnt/data/spark_data\n",
-                  "./sbin/start-master.sh\n",
-                  "cd /mnt/data/kudu/build/release\n",
-                  "mkdir -p /root/wals\n",
-                	"nohup bin/kudu-master -fs_wal_dir=/mnt/wals -fs_data_dirs=/var/lib/kudu/master -logtostderr -use_hybrid_clock=false --webserver_doc_root=/mnt/data/kudu &\n",
 
                   "echo Started Master!\n",
                   "echo Signal the status from cfn-init\n",
@@ -265,7 +254,6 @@
             "sed -i -e 's/{MASTER_PRIVATE_IP}/127.0.0.1/g' /etc/collectd/collectd.conf\n",
             "sed -i -e 's/{MASTER_PRIVATE_IP}/127.0.0.1/g' /mnt/data/spark/conf/metrics.properties\n",
 
-
             "service collectd restart\n",
             "service carbon-cache restart\n",
             "service apache2 restart\n",
@@ -284,7 +272,6 @@
             "wget https://s3.amazonaws.com/aws-cloudwatch/downloads/latest/awslogs-agent-setup.py\n",
 
             "python awslogs-agent-setup.py -n -r ", { "Ref" : "AWS::Region" }, " -c /tmp/cwlogs/output.conf || error_exit 'Failed to run CloudWatch Logs agent setup'\n",
-
 
             "/usr/local/bin/cfn-init -v ",
             "         --stack ", { "Ref" : "AWS::StackName" },
