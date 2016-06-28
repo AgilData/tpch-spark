@@ -276,7 +276,7 @@
                 "command" : "sh /root/start-runner.sh",
                 "env" : {
                   "ZOOKEEPER_ADDRESS": {"Fn::GetAtt" : ["MasterInstance", "PublicIp"]},
-                  "STACK_NAME": { "Ref" : "AWS::StackName" }
+                  "STACK_NAME": { "Ref" : "AWS::StackName" },
                   "POWER_ONLY": { "Ref" : "PowerOnly"}
                 },
                 "cwd" : "~"
