@@ -177,6 +177,21 @@
                   "sudo -u postgres psql \"--command=CREATE USER tpch WITH PASSWORD 'tpch';\"\n",
                   "sudo -u postgres psql \"--command=CREATE DATABASE tpch WITH OWNER tpch;\"\n",
 
+                  "cd /mnt/data/\n",
+                  "git clone https://github.com/AgilData/tpch-spark.git\n",
+                  "cd /mnt/data/tpch-spark/dbgen/\n",
+                  "make clean\n",
+                  "make\n",
+
+                  "cd /mnt/data/tpch-spark\n",
+                  "cp /root/.aws/credentials /root/.aws/config\n",
+                  "echo 'region = us-east-1' >> /root/.aws/config\n",
+                  "apt-get install -y jq\n",
+                  "export ZOOKEEPER_ADDRESS=$(wget http://ipinfo.io/ip -qO -)\n",
+                  "export TABLET_NAME=\"$(hostname).ec2.internal\"\n",
+                  "echo \"{\\\"masterIp\\\": \\\"$ZOOKEEPER_ADDRESS\\\", \\\"tablets\\\" : [\\\"$TABLET_NAME\\\"] } \" > charts/tablet-ips.json\n",
+                  "nohup python -m SimpleHTTPServer 8011 &\n",
+
                   "echo Started Master!\n",
                   "echo Signal the status from cfn-init\n",
                   "/usr/local/bin/cfn-signal -e $? ",
