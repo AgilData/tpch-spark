@@ -17,8 +17,10 @@
 				$('#imgMem').attr('src', buildUrl(["memory.memory-used"], data));
 				$('#imgRead').attr('src', buildUrl(["disk-xvdb.disk_octets.read","disk-xvdc.disk_octets.read"], data));
 				$('#imgWrite').attr('src', buildUrl(["disk-xvdb.disk_octets.write","disk-xvdc.disk_octets.write"], data));
-				$('#imgSnd').attr('src', buildUrl(["interface-eth0.if_octets.rx"], data));
-				$('#imgRcv').attr('src', buildUrl(["interface-eth0.if_octets.tx"], data));
+				$('#imgROps').attr('src', buildUrl(["disk-xvdb.disk_ops.read","disk-xvdc.disk_ops.read"], data));
+				$('#imgWOps').attr('src', buildUrl(["disk-xvdb.disk_ops.write","disk-xvdc.disk_ops.write"], data));
+				$('#imgSnd').attr('src', buildUrl(["interface-eth0.if_octets.tx"], data));
+				$('#imgRcv').attr('src', buildUrl(["interface-eth0.if_octets.rx"], data));
 			}, 3000);
 		});
 	}
@@ -46,10 +48,14 @@
 	</script>
 </head>
 <body onload="init()">
-        <img id="imgCpu" alt="cpu" style="position: absolute; top: 0; left: 0; right: 50%; bottom: 33%;" />
-        <img id="imgMem" alt="mem" style="position: absolute; top: 0; left: 50%; right: 0; bottom: 33%;" />
-        <img id="imgRead" alt="read" style="position: absolute; top: 33%; left: 0%; right: 0; bottom: 66%;" />
-        <img id="imgWrite" alt="write" style="position: absolute; top: 33%; left: 50%; right: 0; bottom: 66%;" />
-        <img id="imgSnd" alt="read" style="position: absolute; top: 66%; left: 0%; right: 0; bottom: 100%;" />
-        <img id="imgRcv" alt="write" style="position: absolute; top: 66%; left: 50%; right: 0; bottom: 100%;" />
+        <img id="imgCpu" alt="cpu" style="			position: absolute; top:   0; left:   0; right: 33%; bottom: 33%;" />
+        <img id="imgMem" alt="mem" style="			position: absolute; top:   0; left: 33%; right: 66%; bottom: 33%;" />
+
+        <img id="imgRead" alt="read" style="		position: absolute; top: 33%; left:  0%; right: 33%; bottom: 66%;" />
+        <img id="imgROps" alt="read iops" style="	position: absolute; top: 33%; left: 33%; right: 66%; bottom: 66%;" />
+        <img id="imgSnd" alt="send" style="			position: absolute; top: 33%; left: 66%; right:100%; bottom: 66%;" />
+
+        <img id="imgWrite" alt="write" style="		position: absolute; top: 66%; left:  0%; right: 33%; bottom: 100%;" />        
+        <img id="imgWOps" alt="write iops" style="	position: absolute; top: 66%; left: 33%; right: 66%; bottom: 100%;" />
+        <img id="imgRcv" alt="recv" style="		position: absolute; top: 66%; left: 66%; right:100%; bottom: 100%;" />
 </body>
