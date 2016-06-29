@@ -227,8 +227,12 @@ class Populate(execCtx: ExecCtx, inputDir: String, partitionCount: Int) {
       kc.deleteTable(tableName)
     }
     val tableOptions = new CreateTableOptions()
-      .addHashPartitions(pk.asJava, partitionCount) // TODO: Range partitions
       .setNumReplicas(1)
+    if("lineitem".eq(tableName)) {
+      tableOptions.addHashPartitions(List("l_orderkey").asJava, partitionCount)
+    } else {
+      tableOptions.addHashPartitions(pk.asJava, partitionCount)
+    }
     kc.createTable(tableName, df.schema, pk, tableOptions)
     kc.save(df, tableName)
   }
