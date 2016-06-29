@@ -8,19 +8,19 @@ else
 	UUID=$(cat /proc/sys/kernel/random/uuid | egrep -o "[a-zA-Z][-a-zA-Z0-9]*")
 fi
 
-echo ParameterKey=BrokerCapacity,ParameterValue=$1
-echo ParameterKey=WorkerMem,ParameterValue=$2
-echo ParameterKey=InstanceType,ParameterValue=$3
-echo ParameterKey=ExecMem,ParameterValue=$4
-echo ParameterKey=KeyName,ParameterValue=$5
+echo ParameterKey=BrokerCapacity,ParameterValue=$1			# Number of servers to spin up as Spark workers / Kudu tablets
+echo ParameterKey=WorkerMem,ParameterValue=$2				# Overall amount of memory each worker should allocate (should be system memory / 2 to save room for kudu)
+echo ParameterKey=InstanceType,ParameterValue=$3			# m3.medium, m3.2xlarge, etc https://aws.amazon.com/ec2/pricing/
+echo ParameterKey=ExecMem,ParameterValue=$4					# Memory Spark should allocate for each executor (there can be multiple executors active on a worker - should be equal to WorkerMem)
+echo ParameterKey=KeyName,ParameterValue=$5					# AWS secret key name
 echo ParameterKey=DataVolumeSize,ParameterValue=$6
-echo ParameterKey=ScaleFactor,ParameterValue=$7
-echo ParameterKey=PartitionCount,ParameterValue=$8
-echo ParameterKey=BenchmarkUsers,ParameterValue=$9
+echo ParameterKey=ScaleFactor,ParameterValue=$7				# TPC-H scale factor 1=1GB, 10=10GB, etc
+echo ParameterKey=PartitionCount,ParameterValue=$8			# Default partition count for Spark
+echo ParameterKey=BenchmarkUsers,ParameterValue=$9			# How many simultaneous users to simulate
 echo ParameterKey=WalVolumeSize,ParameterValue=${10}
-echo ParameterKey=IOPS,ParameterValue=${11}
-echo ParameterKey=PowerOnly,ParameterValue=${12}
-echo ParameterKey=KuduPartitionCount,ParameterValue=${13}
+echo ParameterKey=IOPS,ParameterValue=${11}					# Supposedly this should be <= disk size * 30, but > 1000 never reliably seems to work
+echo ParameterKey=PowerOnly,ParameterValue=${12}			# if "true" then run only the power test, which is fast
+echo ParameterKey=KuduPartitionCount,ParameterValue=${13} 	# From what the kudu team says, it sounds like this should be servers * 10
 
 echo StackID=$UUID
 aws cloudformation create-stack \

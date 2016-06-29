@@ -39,6 +39,7 @@ object Main {
     options.addOption("t", "throughput", false, "run only the throughput benchmark")
     options.addOption("c", "scale-factor", true, "scale factor of data population")
     options.addOption("r", "maven-repo", true, "location of maven repository")
+    options.addOption("x", "query-index", true, "The index of the query to run, or * for all")
 
     val parser = new BasicParser
     val cmd = parser.parse(options, args)
@@ -62,6 +63,7 @@ object Main {
     val KUDU_PARTITION_COUNT = Integer.parseInt(cmd.getOptionValue("d", "20"))
     val OUTPUT_DIR = "/tmp"
     val MAVEN_REPO = cmd.getOptionValue("r", s"${System.getProperty("user.home")}/.m2/repository")
+    val queryIdx = cmd.getOptionValue("x", "*")
 
     println(s"KUDU_MASTER=$KUDU_MASTER")
     println(s"INPUT_DIR=$INPUT_DIR")
@@ -69,6 +71,7 @@ object Main {
     println(s"EXEC_MEM=$EXEC_MEM")
     println(s"PARTITION_COUNT=$PARTITION_COUNT")
     println(s"KUDU_PARTITION_COUNT=$KUDU_PARTITION_COUNT")
+    println(s"queryIdx=$queryIdx")
 
     // get the name of the class excluding dollar signs and package
     val className = this.getClass.getName.split("\\.").last.replaceAll("\\$", "")
@@ -111,7 +114,6 @@ object Main {
         val scaleFactor = Integer.parseInt(cmd.getOptionValue("c"))
         val inputDir = cmd.getOptionValue("i")
         val file = new File(cmd.getOptionValue("f"))
-        val queryIdx = "*"
 
         val users = benchMode match {
           case BenchMode.Throughput | BenchMode.All => Integer.parseInt(cmd.getOptionValue("u", s"$concurrency"))

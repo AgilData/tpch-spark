@@ -112,22 +112,23 @@ class TpchQuery(execCtx: ExecCtx, result: Result, dbGenInputDir: String) {
 
     while (it.hasNext) {
       val index = it.next()
+      if(queryIdx.eq("*") || Integer.parseInt(queryIdx) == index) {
+        val t1 = System.currentTimeMillis()
 
-      val t1 = System.currentTimeMillis()
+        println(s"------------ Running query $index")
 
-      println(s"------------ Running query $index")
+        val q = queries(index)
+        var cnt: Long = 0
+        ResultHelper.timeAndRecord(result, q.query, mode, threadNo) {
+          val df = execute(q, mode, incrementor)
+          df.show()
+          cnt = df.count()
+        }
 
-      val q = queries(index)
-      var cnt: Long = 0
-      ResultHelper.timeAndRecord(result, q.query, mode, threadNo) {
-        val df = execute(q, mode, incrementor)
-        df.show()
-        cnt = df.count()
+        val t2 = System.currentTimeMillis()
+
+        println(s"Query $index took ${t2 - t1} ms to return $cnt rows")
       }
-
-      val t2 = System.currentTimeMillis()
-
-      println(s"Query $index took ${t2 - t1} ms to return $cnt rows")
     }
 
     if (mode == ResultHelper.Mode.Power) {
