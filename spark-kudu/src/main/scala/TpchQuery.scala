@@ -121,7 +121,7 @@ class TpchQuery(execCtx: ExecCtx, result: Result, dbGenInputDir: String) {
         var cnt: Long = 0
         ResultHelper.timeAndRecord(result, q.query, mode, threadNo) {
           val df = execute(q, mode, incrementor)
-          df.show()
+          //df.show() Don't include show, this doubles our execution time
           cnt = df.count()
         }
 
