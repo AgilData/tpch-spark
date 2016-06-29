@@ -220,8 +220,10 @@ class Populate(execCtx: ExecCtx, inputDir: String, partitionCount: Int) {
   }
 
   def writeToKudu(kuduContext: Broadcast[ExtendedKuduContext], df: DataFrame, tableName: String, pk: Seq[String]): Unit = {
-    println(s"Importing ${df.count()} rows from $tableName with schema ${df.schema}")
+    // These counts take multiple minutes to run. Not worth it just to show a number in the logs
+    //println(s"Importing ${df.count()} rows from $tableName with schema ${df.schema}")
     //df.show(10)
+    println(s"Importing lots of rows from $tableName with schema ${df.schema}")
     val kc: ExtendedKuduContext = kuduContext.value
     if (kc.tableExists(tableName)) {
       kc.deleteTable(tableName)
