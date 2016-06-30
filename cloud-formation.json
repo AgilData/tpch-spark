@@ -90,6 +90,18 @@
       "Description" : "Run only the power query",
       "Type": "String"
     },
+    
+    "PublicSubnet" : {
+		"Default": "subnet-f37f09ab",
+		"Description" : "Subnet of VPC",
+		"Type": "String"
+	},
+	
+	"myVPCEC2SecurityGroup" : {
+		"Default": "sg-3d084346",
+		"Description" : "Security group of VPC",
+		"Type": "String"
+	},
 
     "SSHLocation" : {
       "Description" : " The IP address range that can be used to SSH to the EC2 instances",
@@ -294,9 +306,15 @@
       },
       "Properties": {
         "ImageId" : "ami-d5dc1eb8",
-        "AvailabilityZone" : "us-east-1b",
+		"NetworkInterfaces": [ {
+		  "AssociatePublicIpAddress": "true",
+		  "DeviceIndex": "0",
+		  "GroupSet": [{ "Ref" : "myVPCEC2SecurityGroup" }],
+		  "SubnetId": { "Ref" : "PublicSubnet" }
+		} ],
+		"EbsOptimized" : true,
+        "AvailabilityZone" : "us-east-1d",
         "InstanceType"   : { "Ref" : "InstanceType" },
-        "SecurityGroups" : [ {"Ref" : "TestRunnerSecurityGroup"} ],
         "IamInstanceProfile": { "Ref": "LogRoleInstanceProfile" },
         "KeyName"        : { "Ref" : "KeyName" },
         "Tags" : [
@@ -362,7 +380,8 @@
     "TServerGroup" : {
       "Type" : "AWS::AutoScaling::AutoScalingGroup",
       "Properties" : {
-        "AvailabilityZones" : ["us-east-1b"],
+		"VPCZoneIdentifier" : ["subnet-f37f09ab"],
+        "AvailabilityZones" : ["us-east-1d"],
         "LaunchConfigurationName" : { "Ref" : "LaunchConfig" },
         "MinSize" : "1",
         "MaxSize" : "128",
@@ -509,8 +528,10 @@
       },
       "Properties": {
         "ImageId" : "ami-d5dc1eb8",
+		"AssociatePublicIpAddress": "true",
+		"EbsOptimized" : true,
         "InstanceType" : { "Ref" : "InstanceType" },
-        "SecurityGroups" : [ {"Ref" : "TServerSecurityGroup"} ],
+        "SecurityGroups" : [ {"Ref" : "myVPCEC2SecurityGroup"} ],
         "IamInstanceProfile": { "Ref": "LogRoleInstanceProfile" },
         "KeyName" : { "Ref" : "KeyName" },
         "BlockDeviceMappings": [{
@@ -569,51 +590,6 @@
             "/usr/local/bin/cfn-init -v --stack ", { "Ref":"AWS::StackName" }, " --resource LaunchConfig", " --configsets InstallAndRun ", " --region ", { "Ref": "AWS::Region" }, "\n"
           ]]}
         }
-      }
-    },
-
-    "TServerSecurityGroup" : {
-      "Type" : "AWS::EC2::SecurityGroup",
-      "Properties" : {
-        "GroupDescription" : "Enable HTTP access via port 80, SSH access, remote debugging, and JMX",
-        "SecurityGroupIngress" : [
-          {
-            "IpProtocol" : "tcp",
-            "FromPort" : "0",
-            "ToPort" : "65535",
-            "CidrIp" : { "Ref" : "SSHLocation"}
-          }
-        ]
-      }
-    },
-
-    "TestRunnerSecurityGroup" : {
-      "Type" : "AWS::EC2::SecurityGroup",
-      "Properties" : {
-        "GroupDescription" : "Enable access via port 2181 and SSH access",
-        "SecurityGroupIngress" : [
-          {
-            "IpProtocol" : "tcp",
-            "FromPort" : "0",
-            "ToPort" : "65535",
-            "CidrIp" : { "Ref" : "SSHLocation"}
-          }
-        ]
-      }
-    },
-
-    "KuduSparkMasterSecurityGroup" : {
-      "Type" : "AWS::EC2::SecurityGroup",
-      "Properties" : {
-        "GroupDescription" : "Enable access via port 2181 and SSH access",
-        "SecurityGroupIngress" : [
-          {
-            "IpProtocol" : "tcp",
-            "FromPort" : "0",
-            "ToPort" : "65535",
-            "CidrIp" : { "Ref" : "SSHLocation"}
-          }
-        ]
       }
     },
 
@@ -726,9 +702,15 @@
       },
       "Properties": {
         "ImageId" : "ami-d5dc1eb8",
-        "AvailabilityZone" : "us-east-1b",
+		"EbsOptimized" : true,
+		"NetworkInterfaces": [ {
+		  "AssociatePublicIpAddress": "true",
+		  "DeviceIndex": "0",
+		  "GroupSet": [{ "Ref" : "myVPCEC2SecurityGroup" }],
+		  "SubnetId": { "Ref" : "PublicSubnet" }
+		} ],
+        "AvailabilityZone" : "us-east-1d",
         "InstanceType"   : { "Ref" : "InstanceType" },
-        "SecurityGroups" : [ {"Ref" : "KuduSparkMasterSecurityGroup"} ],
         "IamInstanceProfile": { "Ref": "LogRoleInstanceProfile" },
         "KeyName"        : { "Ref" : "KeyName" },
         "Tags" : [
@@ -849,12 +831,14 @@
         ]
       }
     },
+    
     "KudoPocLogGroup": {
       "Type": "AWS::Logs::LogGroup",
       "Properties": {
         "RetentionInDays": 3
       }
     },
+
     "LogRoleInstanceProfile": {
       "Type": "AWS::IAM::InstanceProfile",
       "Properties": {
