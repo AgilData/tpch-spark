@@ -122,7 +122,30 @@ class TpchQuery(execCtx: ExecCtx, result: Result, dbGenInputDir: String) {
         ResultHelper.timeAndRecord(result, q.query, mode, threadNo) {
           val df = execute(q, mode, incrementor)
           //df.show() Don't include show, this doubles our execution time
-          cnt = df.count()
+          cnt = index match {
+            case 1 => q1(df)
+            case 2 => q2(df)
+            case 3 => q3(df)
+            case 4 => q4(df)
+            case 5 => q5(df)
+            case 6 => q6(df)
+            case 7 => q7(df)
+            case 8 => q8(df)
+            case 9 => q9(df)
+            case 10 => q10(df)
+            case 11 => q11(df)
+            case 12 => q12(df)
+            case 13 => q13(df)
+            case 14 => q14(df)
+            case 15 => q15(df)
+            case 16 => q16(df)
+            case 17 => q17(df)
+            case 18 => q18(df)
+            case 19 => q19(df)
+            case 20 => q20(df)
+            case 21 => q21(df)
+            case 22 => q22(df)
+          }
         }
 
         val t2 = System.currentTimeMillis()
@@ -134,6 +157,94 @@ class TpchQuery(execCtx: ExecCtx, result: Result, dbGenInputDir: String) {
     if (mode == ResultHelper.Mode.Power) {
       ResultHelper.timeAndRecord(result, 2, ResultHelper.Mode.PowerRF) { Refresh.executeRF2(dbGenInputDir, threadNo + 1, execCtx, result.sf) }
     }
+  }
+
+  def q1(df: DataFrame): Long = {
+    df.count()
+  }
+
+  def q2(df: DataFrame): Long = {
+    df.count()
+  }
+
+  def q3(df: DataFrame): Long = {
+    df.count()
+  }
+
+  def q4(df: DataFrame): Long = {
+    df.count()
+  }
+
+  def q5(df: DataFrame): Long = {
+    df.count()
+  }
+
+  def q6(df: DataFrame): Long = {
+    df.count()
+  }
+
+  def q7(df: DataFrame): Long = {
+    df.count()
+  }
+
+  def q8(df: DataFrame): Long = {
+    df.count()
+  }
+
+  def q9(df: DataFrame): Long = {
+    df.count()
+  }
+
+  def q10(df: DataFrame): Long = {
+    df.count()
+  }
+
+  def q11(df: DataFrame): Long = {
+    df.count()
+  }
+
+  def q12(df: DataFrame): Long = {
+    df.count()
+  }
+
+  def q13(df: DataFrame): Long = {
+    df.count()
+  }
+
+  def q14(df: DataFrame): Long = {
+    df.count()
+  }
+
+  def q15(df: DataFrame): Long = {
+    df.count()
+  }
+
+  def q16(df: DataFrame): Long = {
+    df.count()
+  }
+
+  def q17(df: DataFrame): Long = {
+    df.count()
+  }
+
+  def q18(df: DataFrame): Long = {
+    df.count()
+  }
+
+  def q19(df: DataFrame): Long = {
+    df.count()
+  }
+
+  def q20(df: DataFrame): Long = {
+    df.count()
+  }
+
+  def q21(df: DataFrame): Long = {
+    df.count()
+  }
+
+  def q22(df: DataFrame): Long = {
+    df.count()
   }
 
   def getQuery(l: String): QueryParams = {
