@@ -118,11 +118,10 @@ class TpchQuery(execCtx: ExecCtx, result: Result, dbGenInputDir: String) {
         println(s"------------ Running query $index")
 
         val q = queries(index)
-        var cnt: Long = 0
         ResultHelper.timeAndRecord(result, q.query, mode, threadNo) {
           val df = execute(q, mode, incrementor)
           //df.show() Don't include show, this doubles our execution time
-          cnt = index match {
+          index match {
             case 1 => q1(df)
             case 2 => q2(df)
             case 3 => q3(df)
@@ -150,7 +149,7 @@ class TpchQuery(execCtx: ExecCtx, result: Result, dbGenInputDir: String) {
 
         val t2 = System.currentTimeMillis()
 
-        println(s"Query $index took ${t2 - t1} ms to return $cnt rows")
+        println(s"Query $index took ${t2 - t1} ms to return some rows")
       }
     }
 
@@ -159,92 +158,92 @@ class TpchQuery(execCtx: ExecCtx, result: Result, dbGenInputDir: String) {
     }
   }
 
-  def q1(df: DataFrame): Long = {
-    df.count()
+  def q1(df: DataFrame): Unit = {
+    df.show()
   }
 
-  def q2(df: DataFrame): Long = {
-    df.count()
+  def q2(df: DataFrame): Unit = {
+    df.show()
   }
 
-  def q3(df: DataFrame): Long = {
-    df.count()
+  def q3(df: DataFrame): Unit = {
+    df.show()
   }
 
-  def q4(df: DataFrame): Long = {
-    df.count()
+  def q4(df: DataFrame): Unit = {
+    df.show()
   }
 
-  def q5(df: DataFrame): Long = {
-    df.count()
+  def q5(df: DataFrame): Unit = {
+    df.show()
   }
 
-  def q6(df: DataFrame): Long = {
-    df.count()
+  def q6(df: DataFrame): Unit = {
+    df.show()
   }
 
-  def q7(df: DataFrame): Long = {
-    df.count()
+  def q7(df: DataFrame): Unit = {
+    df.show()
   }
 
-  def q8(df: DataFrame): Long = {
-    df.count()
+  def q8(df: DataFrame): Unit = {
+    df.show()
   }
 
-  def q9(df: DataFrame): Long = {
-    df.count()
+  def q9(df: DataFrame): Unit = {
+    df.show()
   }
 
-  def q10(df: DataFrame): Long = {
-    df.count()
+  def q10(df: DataFrame): Unit = {
+    df.show()
   }
 
-  def q11(df: DataFrame): Long = {
-    df.count()
+  def q11(df: DataFrame): Unit = {
+    df.show()
   }
 
-  def q12(df: DataFrame): Long = {
-    df.count()
+  def q12(df: DataFrame): Unit = {
+    df.show()
   }
 
-  def q13(df: DataFrame): Long = {
-    df.count()
+  def q13(df: DataFrame): Unit = {
+    df.show()
   }
 
-  def q14(df: DataFrame): Long = {
-    df.count()
+  def q14(df: DataFrame): Unit = {
+    df.show()
   }
 
-  def q15(df: DataFrame): Long = {
-    df.count()
+  def q15(df: DataFrame): Unit = {
+    df.show()
   }
 
-  def q16(df: DataFrame): Long = {
-    df.count()
+  def q16(df: DataFrame): Unit = {
+    df.show()
   }
 
-  def q17(df: DataFrame): Long = {
-    df.count()
+  def q17(df: DataFrame): Unit = {
+    df.show()
   }
 
-  def q18(df: DataFrame): Long = {
-    df.count()
+  def q18(df: DataFrame): Unit = {
+    df.show()
   }
 
-  def q19(df: DataFrame): Long = {
-    df.count()
+  def q19(df: DataFrame): Unit = {
+    df.show()
   }
 
-  def q20(df: DataFrame): Long = {
-    df.count()
+  def q20(df: DataFrame): Unit = {
+    df.show()
   }
 
-  def q21(df: DataFrame): Long = {
-    df.count()
+  def q21(df: DataFrame): Unit = {
+    df.show()
   }
 
-  def q22(df: DataFrame): Long = {
-    df.count()
+  def q22(df: DataFrame): Unit = {
+    df.show()
   }
 
   def getQuery(l: String): QueryParams = {
