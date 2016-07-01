@@ -40,6 +40,7 @@ object Main {
     options.addOption("c", "scale-factor", true, "scale factor of data population")
     options.addOption("r", "maven-repo", true, "location of maven repository")
     options.addOption("x", "query-index", true, "The index of the query to run, or * for all")
+    options.addOption("a", "skip-rf", true, "Skip the RF portions of the test")
 
     val parser = new BasicParser
     val cmd = parser.parse(options, args)
@@ -64,6 +65,7 @@ object Main {
     val OUTPUT_DIR = "/tmp"
     val MAVEN_REPO = cmd.getOptionValue("r", s"${System.getProperty("user.home")}/.m2/repository")
     val queryIdx = cmd.getOptionValue("x", "*")
+    val skipRF =  cmd.getOptionValue("a", "false").toBoolean
 
     println(s"KUDU_MASTER=$KUDU_MASTER")
     println(s"INPUT_DIR=$INPUT_DIR")
@@ -123,11 +125,11 @@ object Main {
         val result = new Result(users, scaleFactor)
 
         benchMode match {
-          case BenchMode.Power => executePower(result, execCtx, queryIdx, file, inputDir)
-          case BenchMode.Throughput => executeThroughput(result, execCtx, queryIdx, file, users, inputDir)
+          case BenchMode.Power => executePower(result, execCtx, queryIdx, file, inputDir, skipRF)
+          case BenchMode.Throughput => executeThroughput(result, execCtx, queryIdx, file, users, inputDir, skipRF)
           case BenchMode.All =>
-            executePower(result, execCtx, queryIdx, file, inputDir)
-            executeThroughput(result, execCtx, queryIdx, file, users, inputDir)
+            executePower(result, execCtx, queryIdx, file, inputDir, skipRF)
+            executeThroughput(result, execCtx, queryIdx, file, users, inputDir, skipRF)
           case _ => throw new IllegalStateException()
         }
 
@@ -137,12 +139,12 @@ object Main {
     }
   }
 
-  def executePower(result: Result, execCtx: ExecCtx, queryIdx: String, file: File, inputDir: String): Unit = {
+  def executePower(result: Result, execCtx: ExecCtx, queryIdx: String, file: File, inputDir: String, skipRF: Boolean): Unit = {
     println("Executing power benchmark...")
-    new TpchQuery(execCtx, result, inputDir).executeQueries(file, queryIdx, ResultHelper.Mode.Power)
+    new TpchQuery(execCtx, result, inputDir).executeQueries(file, queryIdx, ResultHelper.Mode.Power, skipRF)
   }
 
-  def executeThroughput(result: Result, execCtx: ExecCtx, queryIdx: String, file: File, users: Int, inputDir: String): Unit = {
+  def executeThroughput(result: Result, execCtx: ExecCtx, queryIdx: String, file: File, users: Int, inputDir: String, skipRF: Boolean): Unit = {
     println(s"Executing throughput benchmark... Concurrency: $users")
     val pool: ExecutorService = Executors.newFixedThreadPool(users)
     val incrementor = new AtomicInteger(0)
@@ -164,7 +166,7 @@ object Main {
             def call(): String = {
               println(s"Executing Query stream thread. ThreadNo $i")
               ResultHelper.timeAndRecord(result, i, ResultHelper.Mode.ThroughputE2E) {
-                new TpchQuery(execCtx, result, inputDir).executeQueries(file, queryIdx, ResultHelper.Mode.ThroughputQ, i, Some(incrementor))
+                new TpchQuery(execCtx, result, inputDir).executeQueries(file, queryIdx, ResultHelper.Mode.ThroughputQ, skipRF, i, Some(incrementor))
               }
               println(s"Query stream thread $i COMPLETE.")
               "OK"

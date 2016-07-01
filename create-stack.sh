@@ -1,4 +1,4 @@
-# Usage: ./create-stack.sh 2 5G m3.large 5G brent-keys2 50 1 20 8 50 500 true 20
+# Usage: ./create-stack.sh 2 5G m3.large 5G brent-keys2 50 1 20 8 50 500 true 20 true
 
 UUID='unknown'
 unamestr=`uname`
@@ -21,6 +21,7 @@ echo ParameterKey=WalVolumeSize,ParameterValue=${10}
 echo ParameterKey=IOPS,ParameterValue=${11}					# Supposedly this should be <= disk size * 30, but > 1000 never reliably seems to work
 echo ParameterKey=PowerOnly,ParameterValue=${12}			# if "true" then run only the power test, which is fast
 echo ParameterKey=KuduPartitionCount,ParameterValue=${13} 	# From what the kudu team says, it sounds like this should be servers * 10
+echo ParameterKey=SkipRF,ParameterValue=${14}				# if "true" skip the RF test
 
 echo StackID=$UUID
 aws cloudformation create-stack \

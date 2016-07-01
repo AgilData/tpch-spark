@@ -30,7 +30,11 @@ class TpchQuery(execCtx: ExecCtx, result: Result, dbGenInputDir: String) {
   import sqlCtx.implicits._
 
   tableNames.foreach(tableName =>
-    sqlCtx.read.options(Map("kudu.master" -> master, "kudu.table" -> tableName)).kudu.registerTempTable(tableName))
+    sqlCtx.read.options(Map("kudu.master" -> master, "kudu.table" -> tableName))
+      .kudu
+      .cache
+      .registerTempTable(tableName)
+  )
 
   val customer: DataFrame = sqlCtx.table("customer")
   val region: DataFrame = sqlCtx.table("region")
@@ -82,12 +86,13 @@ class TpchQuery(execCtx: ExecCtx, result: Result, dbGenInputDir: String) {
   def executeQueries(file: File,
                      queryIdx: String,
                      mode: ResultHelper.Mode.Value,
+                     skipRF: Boolean,
                      threadNo: Int = 0,
                      incrementor: Option[AtomicInteger] = None): Unit = {
     val lines = Source.fromFile(file).getLines().toList
 
     println(s"executeQueries() threadNo=$threadNo")
-    if (mode == ResultHelper.Mode.Power) {
+    if (mode == ResultHelper.Mode.Power && !skipRF) {
       ResultHelper.timeAndRecord(result, 1, ResultHelper.Mode.PowerRF) { Refresh.executeRF1(dbGenInputDir, threadNo + 1, execCtx)}
     }
 
@@ -153,7 +158,7 @@ class TpchQuery(execCtx: ExecCtx, result: Result, dbGenInputDir: String) {
       }
     }
 
-    if (mode == ResultHelper.Mode.Power) {
+    if (mode == ResultHelper.Mode.Power && !skipRF) {
       ResultHelper.timeAndRecord(result, 2, ResultHelper.Mode.PowerRF) { Refresh.executeRF2(dbGenInputDir, threadNo + 1, execCtx, result.sf) }
     }
   }
