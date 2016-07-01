@@ -325,8 +325,7 @@
           "DeviceName": "/dev/sdb",
           "Ebs" : {
             "VolumeSize": { "Ref" : "DataVolumeSize" },
-            "VolumeType": "io1",
-            "Iops": { "Ref" : "IOPS"}
+            "VolumeType": "gp2"
           }
         }],
         "UserData": {
