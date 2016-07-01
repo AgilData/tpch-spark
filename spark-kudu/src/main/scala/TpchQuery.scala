@@ -13,7 +13,7 @@ import scala.collection.mutable
 import scala.io.Source
 
 /** Executes TPC-H analytics queries */
-class TpchQuery(execCtx: ExecCtx, result: Result, dbGenInputDir: String) {
+class TpchQuery(execCtx: ExecCtx, result: Result, dbGenInputDir: String, direct: Boolean, scaleFactor: Int) {
   val master = execCtx.kuduCtx.value.kuduMaster
   val tableNames = Array(
     "partsupp",
@@ -29,12 +29,16 @@ class TpchQuery(execCtx: ExecCtx, result: Result, dbGenInputDir: String) {
   private val sqlCtx: SQLContext = execCtx.sqlCtx
   import sqlCtx.implicits._
 
-  tableNames.foreach(tableName =>
-    sqlCtx.read.options(Map("kudu.master" -> master, "kudu.table" -> tableName))
-      .kudu
-      .cache
-      .registerTempTable(tableName)
-  )
+  if(direct) {
+    Csvs.register(sqlCtx, scaleFactor)
+  } else {
+    tableNames.foreach(tableName =>
+      sqlCtx.read.options(Map("kudu.master" -> master, "kudu.table" -> tableName))
+        .kudu
+        .cache
+        .registerTempTable(tableName)
+    )
+  }
 
   val customer: DataFrame = sqlCtx.table("customer")
   val region: DataFrame = sqlCtx.table("region")

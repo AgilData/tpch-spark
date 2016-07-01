@@ -1,11 +1,105 @@
 package tpch
 
 import org.apache.spark.broadcast.Broadcast
-import org.apache.spark.sql.DataFrame
+import org.apache.spark.sql.{DataFrame, SQLContext}
 import org.apache.spark.sql.types._
 import org.kududb.client._
 
 import scala.collection.JavaConverters._
+
+
+object Csvs {
+  def register(sqlContext: SQLContext, scaleFactor: Int): Unit = {
+    val s3Root = s"s3n://brent-emr-test/tpch/${scaleFactor}x"
+
+    val customerSchema = StructType(Array(
+      StructField("c_custkey", IntegerType, false),
+      StructField("c_name", StringType),
+      StructField("c_address", StringType),
+      StructField("c_nationkey", IntegerType),
+      StructField("c_phone", StringType),
+      StructField("c_acctbal", DoubleType),
+      StructField("c_mktsegment", StringType),
+      StructField("c_comment", StringType)
+    ))
+    val lineItemSchema = StructType(Array(
+      StructField("l_orderkey", IntegerType, false),
+      StructField("l_partkey", IntegerType, false),
+      StructField("l_suppkey", IntegerType),
+      StructField("l_linenumber", IntegerType),
+      StructField("l_quantity", DoubleType),
+      StructField("l_extendedprice", DoubleType),
+      StructField("l_discount", DoubleType),
+      StructField("l_tax", DoubleType),
+      StructField("l_returnflag", StringType),
+      StructField("l_linestatus", StringType),
+      StructField("l_shipdate", StringType),
+      StructField("l_commitdate", StringType),
+      StructField("l_receiptdate", StringType),
+      StructField("l_shipinstruct", StringType),
+      StructField("l_shipmode", StringType),
+      StructField("l_comment", StringType)
+    ))
+    val nationSchema = StructType(Array(
+      StructField("n_nationkey", IntegerType, false),
+      StructField("n_name", StringType),
+      StructField("n_regionkey", IntegerType),
+      StructField("n_comment", StringType)
+    ))
+    val regionSchema = StructType(Array(
+      StructField("r_regionkey", IntegerType, false),
+      StructField("r_name", StringType),
+      StructField("r_comment", StringType)
+    ))
+    val orderSchema = StructType(Array(
+      StructField("o_orderkey", IntegerType, false),
+      StructField("o_custkey", IntegerType),
+      StructField("o_orderstatus", StringType),
+      StructField("o_totalprice", DoubleType),
+      StructField("o_orderdate", StringType),
+      StructField("o_orderpriority", StringType),
+      StructField("o_clerk", StringType),
+      StructField("o_shippriority", IntegerType),
+      StructField("o_comment", StringType)
+    ))
+    val partSchema = StructType(Array(
+      StructField("p_partkey", IntegerType, false),
+      StructField("p_name", StringType),
+      StructField("p_mfgr", StringType),
+      StructField("p_brand", StringType),
+      StructField("p_type", StringType),
+      StructField("p_size", IntegerType),
+      StructField("p_container", StringType),
+      StructField("p_retailprice", DoubleType),
+      StructField("p_comment", StringType)
+    ))
+    val partSuppSchema = StructType(Array(
+      StructField("ps_partkey", IntegerType, false),
+      StructField("ps_suppkey", IntegerType, false),
+      StructField("ps_availqty", IntegerType),
+      StructField("ps_supplycost", DoubleType),
+      StructField("ps_comment", StringType)
+    ))
+    val supplierSchema = StructType(Array(
+      StructField("s_suppkey", IntegerType, false),
+      StructField("s_name", StringType),
+      StructField("s_address", StringType),
+      StructField("s_nationkey", IntegerType),
+      StructField("s_phone", StringType),
+      StructField("s_acctbal", DoubleType),
+      StructField("s_comment", StringType)
+    ))
+
+    sqlContext.read.format("com.databricks.spark.csv").schema(customerSchema).option("header", "true").load(s"$s3Root/customer.csv.gz").cache().registerTempTable("customer")
+    sqlContext.read.format("com.databricks.spark.csv").schema(lineItemSchema).option("header", "true").load(s"$s3Root/lineitem.csv.gz").cache().registerTempTable("lineitem")
+    sqlContext.read.format("com.databricks.spark.csv").schema(nationSchema).option("header", "true").load(s"$s3Root/nation.csv.gz").cache().registerTempTable("nation")
+    sqlContext.read.format("com.databricks.spark.csv").schema(regionSchema).option("header", "true").load(s"$s3Root/region.csv.gz").cache().registerTempTable("region")
+    sqlContext.read.format("com.databricks.spark.csv").schema(orderSchema).option("header", "true").load(s"$s3Root/order.csv.gz").cache().registerTempTable("order")
+    sqlContext.read.format("com.databricks.spark.csv").schema(partSchema).option("header", "true").load(s"$s3Root/part.csv.gz").cache().registerTempTable("part")
+    sqlContext.read.format("com.databricks.spark.csv").schema(partSuppSchema).option("header", "true").load(s"$s3Root/partsupp.csv.gz").cache().registerTempTable("partsupp")
+    sqlContext.read.format("com.databricks.spark.csv").schema(supplierSchema).option("header", "true").load(s"$s3Root/supplier.csv.gz").cache().registerTempTable("supplier")
+  }
+}
 
 class Populate(execCtx: ExecCtx, inputDir: String, partitionCount: Int) {
 
@@ -94,118 +188,31 @@ class Populate(execCtx: ExecCtx, inputDir: String, partitionCount: Int) {
   }
 
   def executeIngest(scaleFactor: Int): Unit = {
+    Csvs.register(sqlContext, scaleFactor)
     importGzToKudu(execCtx.kuduCtx, scaleFactor)
   }
 
   def importCsvToKudu(kuduContext: Broadcast[ExtendedKuduContext], inputDir: String) {
-    writeToKudu(kuduContext, customer, "customer", List("c_custkey"))
-    writeToKudu(kuduContext, lineitem, "lineitem", List("l_orderkey", "l_linenumber"))
-    writeToKudu(kuduContext, nation, "nation", List("n_nationkey"))
-    writeToKudu(kuduContext, region, "region", List("r_regionkey"))
-    writeToKudu(kuduContext, order, "order", List("o_orderkey"))
-    writeToKudu(kuduContext, part, "part", List("p_partkey"))
-    writeToKudu(kuduContext, partsupp, "partsupp", List("ps_partkey", "ps_suppkey"))
-    writeToKudu(kuduContext, supplier, "supplier", List("s_suppkey"))
+    writeToKudu(kuduContext, "customer", List("c_custkey"))
+    writeToKudu(kuduContext, "lineitem", List("l_orderkey", "l_linenumber"))
+    writeToKudu(kuduContext, "nation", List("n_nationkey"))
+    writeToKudu(kuduContext, "region", List("r_regionkey"))
+    writeToKudu(kuduContext, "order", List("o_orderkey"))
+    writeToKudu(kuduContext, "part", List("p_partkey"))
+    writeToKudu(kuduContext, "partsupp", List("ps_partkey", "ps_suppkey"))
+    writeToKudu(kuduContext, "supplier", List("s_suppkey"))
   }
 
   def importGzToKudu(kuduContext: Broadcast[ExtendedKuduContext], scaleFactor: Int) {
-    val s3Root = s"s3n://brent-emr-test/tpch/${scaleFactor}x"
 
-    val customerSchema = StructType(Array(
-      StructField("c_custkey", IntegerType, false),
-      StructField("c_name", StringType),
-      StructField("c_address", StringType),
-      StructField("c_nationkey", IntegerType),
-      StructField("c_phone", StringType),
-      StructField("c_acctbal", DoubleType),
-      StructField("c_mktsegment", StringType),
-      StructField("c_comment", StringType)
-    ))
-    val lineItemSchema = StructType(Array(
-      StructField("l_orderkey", IntegerType, false),
-      StructField("l_partkey", IntegerType, false),
-      StructField("l_suppkey", IntegerType),
-      StructField("l_linenumber", IntegerType),
-      StructField("l_quantity", DoubleType),
-      StructField("l_extendedprice", DoubleType),
-      StructField("l_discount", DoubleType),
-      StructField("l_tax", DoubleType),
-      StructField("l_returnflag", StringType),
-      StructField("l_linestatus", StringType),
-      StructField("l_shipdate", StringType),
-      StructField("l_commitdate", StringType),
-      StructField("l_receiptdate", StringType),
-      StructField("l_shipinstruct", StringType),
-      StructField("l_shipmode", StringType),
-      StructField("l_comment", StringType)
-    ))
-    val nationSchema = StructType(Array(
-      StructField("n_nationkey", IntegerType, false),
-      StructField("n_name", StringType),
-      StructField("n_regionkey", IntegerType),
-      StructField("n_comment", StringType)
-    ))
-    val regionSchema = StructType(Array(
-      StructField("r_regionkey", IntegerType, false),
-      StructField("r_name", StringType),
-      StructField("r_comment", StringType)
-    ))
-    val orderSchema = StructType(Array(
-      StructField("o_orderkey", IntegerType, false),
-      StructField("o_custkey", IntegerType),
-      StructField("o_orderstatus", StringType),
-      StructField("o_totalprice", DoubleType),
-      StructField("o_orderdate", StringType),
-      StructField("o_orderpriority", StringType),
-      StructField("o_clerk", StringType),
-      StructField("o_shippriority", IntegerType),
-      StructField("o_comment", StringType)
-    ))
-    val partSchema = StructType(Array(
-      StructField("p_partkey", IntegerType, false),
-      StructField("p_name", StringType),
-      StructField("p_mfgr", StringType),
-      StructField("p_brand", StringType),
-      StructField("p_type", StringType),
-      StructField("p_size", IntegerType),
-      StructField("p_container", StringType),
-      StructField("p_retailprice", DoubleType),
-      StructField("p_comment", StringType)
-    ))
-    val partSuppSchema = StructType(Array(
-      StructField("ps_partkey", IntegerType, false),
-      StructField("ps_suppkey", IntegerType, false),
-      StructField("ps_availqty", IntegerType),
-      StructField("ps_supplycost", DoubleType),
-      StructField("ps_comment", StringType)
-    ))
-    val supplierSchema = StructType(Array(
-      StructField("s_suppkey", IntegerType, false),
-      StructField("s_name", StringType),
-      StructField("s_address", StringType),
-      StructField("s_nationkey", IntegerType),
-      StructField("s_phone", StringType),
-      StructField("s_acctbal", DoubleType),
-      StructField("s_comment", StringType)
-    ))
-
-    val customer = sqlContext.read.format("com.databricks.spark.csv").schema(customerSchema).option("header", "true").load(s"$s3Root/customer.csv.gz")
-    val lineitem = sqlContext.read.format("com.databricks.spark.csv").schema(lineItemSchema).option("header", "true").load(s"$s3Root/lineitem.csv.gz")
-    val nation = sqlContext.read.format("com.databricks.spark.csv").schema(nationSchema).option("header", "true").load(s"$s3Root/nation.csv.gz")
-    val region = sqlContext.read.format("com.databricks.spark.csv").schema(regionSchema).option("header", "true").load(s"$s3Root/region.csv.gz")
-    val order = sqlContext.read.format("com.databricks.spark.csv").schema(orderSchema).option("header", "true").load(s"$s3Root/order.csv.gz")
-    val part = sqlContext.read.format("com.databricks.spark.csv").schema(partSchema).option("header", "true").load(s"$s3Root/part.csv.gz")
-    val partsupp = sqlContext.read.format("com.databricks.spark.csv").schema(partSuppSchema).option("header", "true").load(s"$s3Root/partsupp.csv.gz")
-    val supplier = sqlContext.read.format("com.databricks.spark.csv").schema(supplierSchema).option("header", "true").load(s"$s3Root/supplier.csv.gz")
-
-    writeToKudu(kuduContext, customer, "customer", List("c_custkey"))
-    writeToKudu(kuduContext, lineitem, "lineitem", List("l_orderkey", "l_linenumber"))
-    writeToKudu(kuduContext, nation, "nation", List("n_nationkey"))
-    writeToKudu(kuduContext, region, "region", List("r_regionkey"))
-    writeToKudu(kuduContext, order, "order", List("o_orderkey"))
-    writeToKudu(kuduContext, part, "part", List("p_partkey"))
-    writeToKudu(kuduContext, partsupp, "partsupp", List("ps_partkey", "ps_suppkey"))
-    writeToKudu(kuduContext, supplier, "supplier", List("s_suppkey"))
+    writeToKudu(kuduContext, "customer", List("c_custkey"))
+    writeToKudu(kuduContext, "lineitem", List("l_orderkey", "l_linenumber"))
+    writeToKudu(kuduContext, "nation", List("n_nationkey"))
+    writeToKudu(kuduContext, "region", List("r_regionkey"))
+    writeToKudu(kuduContext, "order", List("o_orderkey"))
+    writeToKudu(kuduContext, "part", List("p_partkey"))
+    writeToKudu(kuduContext, "partsupp", List("ps_partkey", "ps_suppkey"))
+    writeToKudu(kuduContext, "supplier", List("s_suppkey"))
   }
 
   def splitCsv(scaleFactor: Int) {
@@ -219,10 +226,11 @@ class Populate(execCtx: ExecCtx, inputDir: String, partitionCount: Int) {
     writeToCsv(supplier, "supplier", scaleFactor)
   }
 
-  def writeToKudu(kuduContext: Broadcast[ExtendedKuduContext], df: DataFrame, tableName: String, pk: Seq[String]): Unit = {
+  def writeToKudu(kuduContext: Broadcast[ExtendedKuduContext], tableName: String, pk: Seq[String]): Unit = {
     // These counts take multiple minutes to run. Not worth it just to show a number in the logs
     //println(s"Importing ${df.count()} rows from $tableName with schema ${df.schema}")
     //df.show(10)
+    val df = sqlContext.table(tableName)
     println(s"Importing lots of rows from $tableName with schema ${df.schema}")
     val kc: ExtendedKuduContext = kuduContext.value
     if (kc.tableExists(tableName)) {

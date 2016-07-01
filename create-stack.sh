@@ -1,4 +1,4 @@
-# Usage: ./create-stack.sh 2 5G m3.large 5G brent-keys2 50 1 20 8 50 500 true 20 true
+# Usage: ./create-stack.sh 2 5G m3.large 5G brent-keys2 50 1 20 8 50 500 true 20 true true
 
 UUID='unknown'
 unamestr=`uname`
@@ -22,6 +22,7 @@ echo ParameterKey=IOPS,ParameterValue=${11}					# Supposedly this should be <= d
 echo ParameterKey=PowerOnly,ParameterValue=${12}			# if "true" then run only the power test, which is fast
 echo ParameterKey=KuduPartitionCount,ParameterValue=${13} 	# From what the kudu team says, it sounds like this should be servers * 10
 echo ParameterKey=SkipRF,ParameterValue=${14}				# if "true" skip the RF test
+echo ParameterKey=Direct,ParameterValue=${15}				# Populate directly from S3
 
 echo StackID=$UUID
 aws cloudformation create-stack \
@@ -41,6 +42,8 @@ aws cloudformation create-stack \
 		ParameterKey=WalVolumeSize,ParameterValue=${10} \
 		ParameterKey=IOPS,ParameterValue=${11} \
 		ParameterKey=PowerOnly,ParameterValue=${12} \
-		ParameterKey=KuduPartitionCount,ParameterValue=${13} 
+		ParameterKey=KuduPartitionCount,ParameterValue=${13} \ 
+		ParameterKey=SkipRF,ParameterValue=${14} \ 
+		ParameterKey=Direct,ParameterValue=${15}
 
 UUID=$UUID ./poll.sh

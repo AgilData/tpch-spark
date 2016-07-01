@@ -97,6 +97,12 @@
       "Type": "String"
     },
     
+    "Direct" : {
+      "Default": "false",
+      "Description" : "Load directly from s3",
+      "Type": "String"
+    },
+    
     "PublicSubnet" : {
 		"Default": "subnet-f37f09ab",
 		"Description" : "Subnet of VPC",
@@ -255,6 +261,7 @@
                   "   --scale-factor ", { "Ref" : "ScaleFactor" }, "\n",
                   "   --partitionCount ", { "Ref" : "PartitionCount" },
                   "   -d ", { "Ref" : "KuduPartitionCount"},
+                  "   -b ", { "Ref" : "Direct" },
                   "   --executorMemory ", { "Ref" : "ExecMem" },
                   "   -r /mnt/data/maven_repository ",
                   "   --mode ingest\"\n",
@@ -271,6 +278,7 @@
                   "   --executorMemory ", { "Ref" : "ExecMem" },
                   "   -c ", { "Ref" : "ScaleFactor"},
                   "   -u ", { "Ref" : "BenchmarkUsers" },
+                  "   -b ", { "Ref" : "Direct" },
                   "   -i /mnt/data/tpch-spark/dbgen ",
                   "   -r /mnt/data/maven_repository ",
                   "   --skip-rf ", { "Ref" : "SkipRF"},
