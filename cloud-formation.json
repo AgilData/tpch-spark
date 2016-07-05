@@ -329,7 +329,7 @@
 		} ],
 		"EbsOptimized" : true,
         "AvailabilityZone" : "us-east-1d",
-        "InstanceType"   : { "Ref" : "InstanceType" },
+        "InstanceType"   : "m3.2xlarge",
         "IamInstanceProfile": { "Ref": "LogRoleInstanceProfile" },
         "KeyName"        : { "Ref" : "KeyName" },
         "Tags" : [
@@ -724,7 +724,7 @@
 		  "SubnetId": { "Ref" : "PublicSubnet" }
 		} ],
         "AvailabilityZone" : "us-east-1d",
-        "InstanceType"   : { "Ref" : "InstanceType" },
+        "InstanceType"   : "m3.2xlarge",
         "IamInstanceProfile": { "Ref": "LogRoleInstanceProfile" },
         "KeyName"        : { "Ref" : "KeyName" },
         "Tags" : [
