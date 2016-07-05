@@ -24,10 +24,12 @@ object SparkHelper {
       .setExecutorEnv("spark.sql.tungsten.enabled", "true")
       .setExecutorEnv("spark.sql.shuffle.partitions", partitionCount)
       .setExecutorEnv("spark.serializer", "org.apache.spark.serializer.KryoSerializer")
+      .setExecutorEnv("spark.kryoserializer.buffer.max", "128mb")
       .set("spark.executor.memory", execMem)
       .set("spark.sql.tungsten.enabled", "true")
       .set("spark.sql.shuffle.partitions", partitionCount)
       .set("spark.serializer", "org.apache.spark.serializer.KryoSerializer")
+      .set("spark.kryoserializer.buffer.max", "128mb")
     //.set("spark.metrics.conf", "/mnt/data/spark/conf/metrics.properties")
 
     val sparkCtx = new SparkContext(conf)

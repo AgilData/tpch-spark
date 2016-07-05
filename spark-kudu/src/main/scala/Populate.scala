@@ -92,11 +92,13 @@ object Csvs {
 
     def register(tableName: String, schema: StructType): Unit = {
       val df = sqlContext.read.format("com.databricks.spark.csv")
-        .schema(customerSchema)
+        .schema(schema)
         .option("header", "true")
+        .option("inferSchema", false)
         .load(s"$s3Root/$tableName.csv.gz")
-        .cache()
-      df.collect()
+      df.show()
+      df.cache()
+      df.count()
       df.registerTempTable(tableName)
     }
 
