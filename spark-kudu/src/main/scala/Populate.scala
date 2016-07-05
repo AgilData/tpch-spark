@@ -90,14 +90,24 @@ object Csvs {
       StructField("s_comment", StringType)
     ))
 
-    sqlContext.read.format("com.databricks.spark.csv").schema(customerSchema).option("header", "true").load(s"$s3Root/customer.csv.gz").cache().registerTempTable("customer")
-    sqlContext.read.format("com.databricks.spark.csv").schema(lineItemSchema).option("header", "true").load(s"$s3Root/lineitem.csv.gz").cache().registerTempTable("lineitem")
-    sqlContext.read.format("com.databricks.spark.csv").schema(nationSchema).option("header", "true").load(s"$s3Root/nation.csv.gz").cache().registerTempTable("nation")
-    sqlContext.read.format("com.databricks.spark.csv").schema(regionSchema).option("header", "true").load(s"$s3Root/region.csv.gz").cache().registerTempTable("region")
-    sqlContext.read.format("com.databricks.spark.csv").schema(orderSchema).option("header", "true").load(s"$s3Root/order.csv.gz").cache().registerTempTable("order")
-    sqlContext.read.format("com.databricks.spark.csv").schema(partSchema).option("header", "true").load(s"$s3Root/part.csv.gz").cache().registerTempTable("part")
-    sqlContext.read.format("com.databricks.spark.csv").schema(partSuppSchema).option("header", "true").load(s"$s3Root/partsupp.csv.gz").cache().registerTempTable("partsupp")
-    sqlContext.read.format("com.databricks.spark.csv").schema(supplierSchema).option("header", "true").load(s"$s3Root/supplier.csv.gz").cache().registerTempTable("supplier")
+    def register(tableName: String, schema: StructType): Unit = {
+      val df = sqlContext.read.format("com.databricks.spark.csv")
+        .schema(customerSchema)
+        .option("header", "true")
+        .load(s"$s3Root/$tableName.csv.gz")
+        .cache()
+      df.collect()
+      df.registerTempTable(tableName)
+    }
+
+    register("customer", customerSchema)
+    register("lineitem", lineItemSchema)
+    register("nation", nationSchema)
+    register("region", regionSchema)
+    register("order", orderSchema)
+    register("part", partSchema)
+    register("partsupp", partSuppSchema)
+    register("supplier", supplierSchema)
   }
 }
 
